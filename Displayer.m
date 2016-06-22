@@ -58,14 +58,21 @@ set(gca,'Visible','off')
 guidata(hObject, handles);
 
 %% Code for tracking mouse movements and clicks
+set(gcf,'UserData',handles.masterData)
 
 axes(handles.axes1)
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 
 function selectPoint(~,~) %When mouse is clicked
 
-state.cp = get(gca,'CurrentPoint');
-state.cp = state.cp(1, 1:2)';
+prelimPoint = get(gca,'CurrentPoint');
+prelimPoint = prelimPoint(1,1:2)';
+if prelimPoint(1) > 20 && prelimPoint(2)>20
+    state.cp = prelimPoint;
+else
+    state.cp = [];
+end
+set(gca,'UserData',state)
 display(state.cp)
 
 % --- Outputs from this function are returned to the command line.
