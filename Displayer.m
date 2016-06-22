@@ -17,12 +17,6 @@ function varargout = Displayer(varargin)
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help Displayer
-
-% Last Modified by GUIDE v2.5 20-Jun-2016 13:07:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -43,7 +37,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before Displayer is made visible.
 function Displayer_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -56,17 +49,23 @@ function Displayer_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Update handles structure
-global getOUT; global masterData;
+global getOUT;
 hold on;
-masterData = transfer(getOUT);
+handles.masterData = transfer(getOUT);
 set(handles.frame,'String','1');
 showGT_Callback(handles.showGT,eventdata,handles);
 set(gca,'Visible','off')
 guidata(hObject, handles);
 
-% UIWAIT makes Displayer wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+%% Code for tracking mouse movements and clicks
 
+axes(handles.axes1)
+set(gcf, 'WindowButtonDownFcn', @selectPoint);
+
+function selectPoint(~,~) %When mouse is clicked
+        state.cp = get(gca,'CurrentPoint');
+        state.cp = state.cp(1, 1:2)';
+        fprintf('Hello!\n')
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
@@ -84,9 +83,9 @@ function showGT_Callback(hObject, eventdata, handles)
 % hObject    handle to showGT (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global ALL; global masterData;
+global ALL;
 frame = str2double(get(handles.frame,'String'));                      
-displayGraph(ALL(:,:,frame), masterData(frame).VALL, masterData(frame).EALL, 'on');
+displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
 zoomStartX = 20; zoomStopX = size(ALL(:,:,1),2)-19;
 zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
 set(gca, 'XLim', [zoomStartX zoomStopX])
