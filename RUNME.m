@@ -1,6 +1,8 @@
 format short g;
 format compact;
 
+% Hi Cheng
+
 %% load images
 global TIFF; global tiffOUT; global frame_range;
 global minX; global maxX; global minY; global maxY; global ALL;
