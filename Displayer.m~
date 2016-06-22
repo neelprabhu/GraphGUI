@@ -60,13 +60,14 @@ guidata(hObject, handles);
 %% Code for tracking mouse movements and clicks
 
 axes(handles.axes1)
-set(gcf, 'WindowButtonDownFcn', @selectPoint);
+set(gcf, 'WindowButtonDownFcn', selectPoint(handles));
 
-function selectPoint(~,~) %When mouse is clicked
+function selectPoint(handles) %When mouse is clicked
 
+state
 state.cp = get(gca,'CurrentPoint');
 state.cp = state.cp(1, 1:2)';
-display(state.cp)
+fprintf('Hello!\n')
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
