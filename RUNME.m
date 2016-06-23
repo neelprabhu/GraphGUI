@@ -9,7 +9,7 @@ GT = imread('myGT.png');
 ALL = TIFF;
 tiffOUT = transfer(ALL);
 %xrange = minX:maxX; yrange = minY:maxY; % crop data set
-%ALL = ALL(:,:,1:2);
+ALL = ALL(:,:,1:2);
 %GT = GT(:,:);
 GT = padarray(GT, [20,20]); % zero padding to avoid crashing due to sampling outside image
 ALL = padarray(ALL, [20,20,0]);
@@ -46,7 +46,7 @@ save('z_data.mat', 'data');  % data is a struct that stores all raw tracing info
 % create tracking movie
 Movie = [];
 for ii=1:size(ALL,3)
-    fig = displayGraphtwo(ALL(:,:,ii), data(ii).VALL, data(ii).EALL, 'on');    % function parses the data struct to display tracks over original image
+    fig = displayGraph(ALL(:,:,ii), data(ii).VALL, data(ii).EALL, 'on');    % function parses the data struct to display tracks over original image
     Movie = [Movie, immovie(print(fig, '-RGBImage'));];                     % save current frame to movie
     close(fig);
 end
