@@ -12,7 +12,8 @@ function [ V, E, adjList, faceList, Gamma ] = embryoInitGraph( GT, spacing, optI
 % E: (cell array of struct) of all splines in GT, aka the edge set.
 % adjList: (Nx1 cell array): for index i, contains a (2xK) matrix of K
 % vertex-edge index pairs of vertices and edges adjacent to vertex i.
-% faceList:
+% faceList: Top row of every cell consists of vertex indices, bottom row is
+% spline indices.
 % Gamma: (cell array of R^2 matrix) of the original samplings for each
 % corresponding spline in Splines.
 %
