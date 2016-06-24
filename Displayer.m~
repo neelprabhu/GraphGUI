@@ -74,10 +74,9 @@ else
 end
 
 masterData = get(gcf,'UserData');
-VALL = masterData(1).VALL;
-vertexIndex = eucDistance(VALL,state.cp);
+VALL = masterData(1).VALL
 set(gca,'UserData',state)
-display(vertexIndex)
+display(state.cp)
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
