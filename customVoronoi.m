@@ -1,4 +1,4 @@
-function [vVertices, vRegions, clickedRegion] = VorDia(VALL,clickPoint,draw)
+function [vVertices, vRegions, clickedRegion] = customVoronoi(VALL,clickPoint,draw)
 % Constructs the Voronoi Diagram for a set of vertices in R^2 and returns
 % the index of the Voronoi region that was clicked by the user.
 %
@@ -36,7 +36,7 @@ end
 DT = delaunayTriangulation(vMatrix);
 [vVertices,vRegions] = voronoiDiagram(DT);
 
-%% Plot stuff
+%% Plot diagram
 if draw
     figure(1)
     for m = 1:numel(vRegions)
@@ -44,7 +44,7 @@ if draw
         hold on
     end
     plot(vMatrix(:,1),vMatrix(:,2),'r.','MarkerSize',10)
-    set(gca,'XLim',[20 170]); set(gca,'YLim',[20 170]);
+    %set(gca,'XLim',[20 170]); set(gca,'YLim',[20 170]);
     axis square;
 end
 
