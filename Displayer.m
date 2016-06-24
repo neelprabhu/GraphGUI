@@ -64,20 +64,24 @@ axes(handles.axes1)
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 
 function selectPoint(~,~) %When mouse is clicked
-
+global ALL;
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2)';
+
 if prelimPoint(1) > 20 && prelimPoint(2)>20
     state.cp = prelimPoint;
 else
     state.cp = [];
 end
 
-masterData = get(gcf,'UserData');
-VALL = masterData(1).VALL;
-vertexIndex = eucDistance(VALL,state.cp);
+masterData = get(gcf,'UserData'); %Gets the data struct
+state.vertexIndex = eucDistance(masterData(1).VALL,state.cp); %Finds nearest vertex
 set(gca,'UserData',state)
-display(vertexIndex)
+display(state.vertexIndex)
+
+hold on;
+displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+    masterData(1).EALL, 'on', state.vertexIndex);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
@@ -97,7 +101,7 @@ function showGT_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global ALL;
 frame = str2double(get(handles.frame,'String'));                      
-displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
+H = displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
 zoomStartX = 20; zoomStopX = size(ALL(:,:,1),2)-19;
 zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
 set(gca, 'XLim', [zoomStartX zoomStopX])

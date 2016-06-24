@@ -65,18 +65,25 @@ set(gcf, 'WindowButtonDownFcn', @selectPoint);
 
 function selectPoint(~,~) %When mouse is clicked
 
+global ALL;
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2)';
+
 if prelimPoint(1) > 20 && prelimPoint(2)>20
     state.cp = prelimPoint;
 else
     state.cp = [];
 end
 
-masterData = get(gcf,'UserData');
-VALL = masterData(1).VALL
+masterData = get(gcf,'UserData'); %Gets the data struct
+VALL = masterData(1).VALL;
+state.prevVertexIndex = eucDistance(VALL,state.cp); %Finds nearest vertex
 set(gca,'UserData',state)
-display(state.cp)
+display(state.prevVertexIndex)
+
+hold on;
+displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+    masterData(1).EALL, 'on', state.vertexIndex, state.prevVertexIndex);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
