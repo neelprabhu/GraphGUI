@@ -83,22 +83,32 @@ else
 end
 
 masterData = get(gcf,'UserData'); %Gets the data struct
-state.vertexIndex = eucDistance(masterData(1).VALL,state.cp); %Finds nearest vertex
+%state.vertexIndex = eucDistance(masterData(1).VALL,state.cp); %Finds nearest vertex
 VALL = masterData(1).VALL;
 vertexIndex = eucDistance(VALL,state.cp);
 state.vertexIdx = vertexIndex;
 
 set(gca,'UserData',state)
-display(state.vertexIndex)
+display(state.vertexIdx)
 
 hold on;
 displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-    masterData(1).EALL, 'on', state.vertexIndex);
+    masterData(1).EALL, 'on', state.vertexIdx);
 
 function trackPoint(~, ~)
+    %global ALL;
      s = get(gca, 'UserData');
      if s.vertexIdx ~= -1
-         vertexIndex
+         %move point here
+         newcp = get(gca,'CurrentPoint');
+         newcp = newcp(1, 1:2)';
+         masterData = get(gcf,'UserData'); %Gets the data struct
+         masterData(1).VALL{s.vertexIdx} = newcp;
+%          fprintf('hello');
+%          displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+%             masterData(1).EALL, 'on', s.vertexIdx);
+%        move spline endpoints
+        %idk why there are 10000000 vertices
      end
      
  function stopTracking(~, ~)
