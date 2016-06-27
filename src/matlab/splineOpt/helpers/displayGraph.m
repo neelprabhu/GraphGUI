@@ -1,4 +1,4 @@
-function f = displayGraph(I, V, E, visible)
+function f = displayGraph(I, V, E, visible, newV, prevV)
 %DISPLAYGRAPH Displays graph with splines and vertices
 % 
 % INPUTS
@@ -18,47 +18,62 @@ if nargin < 4 || isempty(visible)
     visible = 'on';
 end
 
+if nargin < 5 || isempty(newV)
+    newV = [];
+end
+
 % get lengths
 N = length(V);
 M = length(E);
 
 % setup figure
-f = 5;
-hold on;
-imagesc(I)
-colormap gray
-set(gca,'visible','off')
-axis equal;
+if isempty(newV)
+    f = 5;
+    hold on;
+    imagesc(I)
+    colormap gray
+    set(gca,'visible','off')
+    axis equal;
+end
 
-% draw the vertices
-for ii=1:N
-
-    % get current vertex
-    v_i = V{ii};
-
-    % draw the vertices
-    if ~sum(isnan(v_i))
-        plot(v_i(1), v_i(2),'go',...
+if ~isempty(newV)
+    v_new = V{newV};
+    h = plot(v_new(1), v_new(2),'go',...
             'MarkerSize',9,...
-            'MarkerEdgeColor','r',...
-            'MarkerFaceColor','r');
+            'MarkerEdgeColor','b',...
+            'MarkerFaceColor','b');
+else
+    state = get(gca,'UserData');
+    state.pointStruct = cell(size(V,1),1);
+    for ii=1:N
+        
+        % get current vertex
+        v_i = V{ii};
+        
+        % draw the vertices
+        if ~sum(isnan(v_i))
+            state.pointStruct{ii} = plot(v_i(1), v_i(2),'go',...
+                'MarkerSize',9,...
+                'MarkerEdgeColor','r',...
+                'MarkerFaceColor','r');
+        end
     end
-    
+    set(gca,'UserData',state)
 end
 
 % draw the splines
-for ii=1:M
-
-    % get current spline
-    si = E{ii};
-
-    % draw the spline and the sample points on it
-    if ~isempty(si)
-        line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 4)
-        line(si.control(1, :), si.control(2, :), ...
-           'Marker', '.', 'MarkerSize', 20, 'Color', 'b');
+if isempty(newV)
+    for ii=1:M
+        
+        % get current spline
+        si = E{ii};
+        
+        % draw the spline and the sample points on it
+        if ~isempty(si)
+            line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 4)
+            line(si.control(1, :), si.control(2, :), ...
+                'Marker', '.', 'MarkerSize', 20, 'Color', 'b');
+        end
+        
     end
-    
-end
-
 end
