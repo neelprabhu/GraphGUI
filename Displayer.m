@@ -58,13 +58,21 @@ set(gca,'Visible','off')
 guidata(hObject, handles);
 
 %% Code for tracking mouse movements and clicks
+state.WindowButtonDownFcn = get(gcf, 'WindowButtonDownFcn');
+state.WindowButtonMotionFcn = get(gcf, 'WindowButtonMotionFcn');
+state.WindowButtonUpFcn = get(gcf, 'WindowButtonUpFcn');
+state.vertexIdx = -1;
 set(gcf,'UserData',handles.masterData)
 
+set(gca, 'UserData', state);
 axes(handles.axes1)
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
+set(gcf, 'WindowButtonMotionFcn', @trackPoint);
+set(gcf, 'WindowButtonUpFcn', @stopTracking);
 
 function selectPoint(~,~) %When mouse is clicked
 global ALL;
+state = get(gca, 'UserData');
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2)';
 
@@ -76,12 +84,27 @@ end
 
 masterData = get(gcf,'UserData'); %Gets the data struct
 state.vertexIndex = eucDistance(masterData(1).VALL,state.cp); %Finds nearest vertex
+VALL = masterData(1).VALL;
+vertexIndex = eucDistance(VALL,state.cp);
+state.vertexIdx = vertexIndex;
+
 set(gca,'UserData',state)
 display(state.vertexIndex)
 
 hold on;
 displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
     masterData(1).EALL, 'on', state.vertexIndex);
+
+function trackPoint(~, ~)
+     s = get(gca, 'UserData');
+     if s.vertexIdx ~= -1
+         vertexIndex
+     end
+     
+ function stopTracking(~, ~)
+        s = get(gca, 'UserData');
+        s.vertexIdx = -1;
+        set(gca, 'UserData', s);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
