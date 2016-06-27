@@ -43,6 +43,8 @@ if ~isempty(newV)
             'MarkerEdgeColor','b',...
             'MarkerFaceColor','b');
 else
+    state = get(gca,'UserData');
+    state.pointStruct = cell(size(V,1),1);
     for ii=1:N
         
         % get current vertex
@@ -50,13 +52,13 @@ else
         
         % draw the vertices
         if ~sum(isnan(v_i))
-            plot(v_i(1), v_i(2),'go',...
+            state.pointStruct{ii} = plot(v_i(1), v_i(2),'go',...
                 'MarkerSize',9,...
                 'MarkerEdgeColor','r',...
                 'MarkerFaceColor','r');
         end
-        
     end
+    set(gca,'UserData',state)
 end
 
 % draw the splines
