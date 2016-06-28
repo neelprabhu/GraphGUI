@@ -86,8 +86,7 @@ end
 
 if state.isAdd
     masterData = get(gcf,'UserData'); %Gets the data struct
-    next = size(masterData(1).VALL);
-    next = next(1);
+    next = size(masterData(1).VALL,1);
     masterData(1).VALL{next+1} = state.cp;
     hold on;
     displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
