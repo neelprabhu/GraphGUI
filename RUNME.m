@@ -9,7 +9,7 @@ GT = imread('myGT.png');
 ALL = TIFF;
 tiffOUT = transfer(ALL);
 %xrange = minX:maxX; yrange = minY:maxY; % crop data set
-ALL = ALL(:,:,1:2);
+%ALL = ALL(:,:,:);
 %GT = GT(:,:);
 GT = padarray(GT, [20,20]); % zero padding to avoid crashing due to sampling outside image
 ALL = padarray(ALL, [20,20,0]);
