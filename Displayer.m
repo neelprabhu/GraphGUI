@@ -93,6 +93,7 @@ if state.isAdd
     displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
         masterData(1).EALL, 'on');
     state.isAdd = 0;
+    set(gcf, 'UserData', masterData);
     set(gca,'UserData',state)
     return;
 end
