@@ -53,8 +53,6 @@ global getOUT;
 hold on;
 handles.masterData = transfer(getOUT);
 set(handles.frame,'String','1');
-showGT_Callback(handles.showGT,eventdata,handles);
-set(gca,'Visible','off')
 guidata(hObject, handles);
 
 %% Code for tracking mouse movements and clicks
@@ -64,6 +62,8 @@ state.WindowButtonUpFcn = get(gcf, 'WindowButtonUpFcn');
 state.vertexIdx = -1;
 state.isAdd = 0;
 set(gcf,'UserData',handles.masterData)
+showGT_Callback(handles.showGT,eventdata,handles);
+set(gca,'Visible','off')
 
 set(gca, 'UserData', state);
 axes(handles.axes1)
@@ -92,8 +92,13 @@ if state.isAdd
     hold on;
     displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
         masterData(1).EALL, 'on');
+    zoomStartX = 20; zoomStopX = size(ALL(:,:,1),2)-19;
+    zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
+    set(gca, 'XLim', [zoomStartX zoomStopX])
+    set(gca, 'YLim', [zoomStartY zoomStopY])
     state.isAdd = 0;
     set(gca,'UserData',state)
+    set(gcf,'UserData',masterData);
     return;
 end
 
@@ -148,8 +153,9 @@ function showGT_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global ALL;
-frame = str2double(get(handles.frame,'String'));                      
-H = displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
+frame = str2double(get(handles.frame,'String'));
+masterData = get(gcf,'UserData');
+H = displayGraph(ALL(:,:,frame), masterData(frame).VALL, masterData(frame).EALL, 'on');
 zoomStartX = 20; zoomStopX = size(ALL(:,:,1),2)-19;
 zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
 set(gca, 'XLim', [zoomStartX zoomStopX])
@@ -185,8 +191,6 @@ function add_element_Callback(hObject, eventdata, handles)
 s = get(gca, 'UserData');
 s.isAdd = 1;
 set(gca, 'UserData', s);
-
-
 
 
 % --- Executes on button press in showRaw.
