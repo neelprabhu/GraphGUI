@@ -114,7 +114,7 @@ function frame_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of frame as text
 %        str2double(get(hObject,'String')) returns contents of frame as a double
-
+showGT_Callback(hObject,eventdata,handles)
 
 % --- Executes during object creation, after setting all properties.
 function frame_CreateFcn(hObject, eventdata, handles)
