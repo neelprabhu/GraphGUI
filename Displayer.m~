@@ -53,17 +53,15 @@ global getOUT;
 hold on;
 handles.masterData = transfer(getOUT);
 set(handles.frame,'String','1');
-guidata(hObject, handles);
 
 %% Code for tracking mouse movements and clicks
-% state.WindowButtonDownFcn = get(gcf, 'WindowButtonDownFcn');
-% state.WindowButtonMotionFcn = get(gcf, 'WindowButtonMotionFcn');
-% state.WindowButtonUpFcn = get(gcf, 'WindowButtonUpFcn');
+
 handles = guidata(hObject);
 handles.vertexIdx = -1;
 handles.isAdd = 0;
-%set(gcf,'UserData',handles.masterData)
-showGT_Callback(handles.showGT,eventdata,handles);
+guidata(hObject,handles)
+
+showGT_Callback(handles.showGT,eventdata,handles); 
 set(gca,'Visible','off')
 
 %set(gca, 'UserData', state);
@@ -76,6 +74,7 @@ function selectPoint(hObject, eventdata) %When mouse is clicked
 global ALL;
 
 handles = guidata(hObject);
+masterData = handles.masterData;
 %state = get(gca, 'UserData');
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2)';
@@ -87,7 +86,6 @@ else
 end
 
 if handles.isAdd
-    masterData = handles.masterData; %Gets the data struct
     next = size(masterData(1).VALL,1);
     masterData(1).VALL{next+1} = handles.cp;
     hold on;
@@ -98,23 +96,22 @@ if handles.isAdd
     set(gca, 'XLim', [zoomStartX zoomStopX])
     set(gca, 'YLim', [zoomStartY zoomStopY])
     handles.isAdd = 0;
+    handles.masterData = masterData;
     guidata(hObject,handles)
     return;
 end
 
-%Gets the data struct
-%state.vertexIndex = eucDistance(masterData(1).VALL,state.cp); %Finds nearest vertex
-masterData = handles.masterData;
-VALL = masterData(1).VALL;
-vertexIndex = eucDistance(masterData(1).VALL,state.cp);
-state.vertexIdx = vertexIndex;
+% Finds nearest vertex
+vertexIndex = eucDistance(masterData(1).VALL,handles.cp);
+handles.vertexIdx = vertexIndex;
 
-set(gca,'UserData',state)
-display(state.vertexIdx)
+%set(gca,'UserData',state)
+display(handles.vertexIdx)
 
 hold on;
 displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-    masterData(1).EALL, 'on', state.vertexIdx);
+    masterData(1).EALL, 'on', handles.vertexIdx);
+guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
      handles = guidata(hObject);
@@ -123,7 +120,7 @@ function trackPoint(hObject,eventdata)
          newcp = get(gca,'CurrentPoint');
          newcp = newcp(1, 1:2)';
          masterData = handles.masterData; %Gets the data struct
-         masterData(1).VALL{s.vertexIdx} = newcp;
+         masterData(1).VALL{handles.vertexIdx} = newcp;
 %          fprintf('hello');
 %          displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
 %             masterData(1).EALL, 'on', s.vertexIdx);
@@ -183,7 +180,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in add_element.
 function add_element_Callback(hObject, eventdata, handles)
 % hObject    handle to add_element (see GCBO)
@@ -201,7 +197,6 @@ function showRaw_Callback(hObject, eventdata, handles)
 global ALL;
 frame = str2double(get(handles.frame,'String'));
 imagesc(ALL(:,:,frame));
-
 
 % --------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
