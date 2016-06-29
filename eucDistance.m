@@ -21,8 +21,12 @@ end
 clickPoint = repmat(clickPoint,1,n);
 
 %% Compute distances
-diff = vMatrix - clickPoint;
-diff = diff.^2;
-sums = sum(diff);
-sums = sqrt(sums);
-[~,vertexIndex] = min(sums);
+if ~isempty(clickPoint)
+    diff = vMatrix - clickPoint;
+    diff = diff.^2;
+    sums = sum(diff);
+    sums = sqrt(sums);
+    [~,vertexIndex] = min(sums);
+else
+    vertexIndex = [];
+end

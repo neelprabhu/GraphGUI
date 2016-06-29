@@ -56,38 +56,41 @@ set(handles.frame,'String','1');
 guidata(hObject, handles);
 
 %% Code for tracking mouse movements and clicks
-state.WindowButtonDownFcn = get(gcf, 'WindowButtonDownFcn');
-state.WindowButtonMotionFcn = get(gcf, 'WindowButtonMotionFcn');
-state.WindowButtonUpFcn = get(gcf, 'WindowButtonUpFcn');
-state.vertexIdx = -1;
-state.isAdd = 0;
-set(gcf,'UserData',handles.masterData)
+% state.WindowButtonDownFcn = get(gcf, 'WindowButtonDownFcn');
+% state.WindowButtonMotionFcn = get(gcf, 'WindowButtonMotionFcn');
+% state.WindowButtonUpFcn = get(gcf, 'WindowButtonUpFcn');
+handles = guidata(hObject);
+handles.vertexIdx = -1;
+handles.isAdd = 0;
+guidata(hObject,handles)
+%set(gcf,'UserData',handles.masterData)
 showGT_Callback(handles.showGT,eventdata,handles);
 set(gca,'Visible','off')
 
-set(gca, 'UserData', state);
+%set(gca, 'UserData', state);
 axes(handles.axes1)
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
 
-function selectPoint(~,~) %When mouse is clicked
+function selectPoint(hObject, eventdata) %When mouse is clicked
 global ALL;
-    
-state = get(gca, 'UserData');
+
+handles = guidata(hObject);
+masterData = handles.masterData;
+%state = get(gca, 'UserData');
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2)';
 
 if prelimPoint(1) > 20 && prelimPoint(2)>20
-    state.cp = prelimPoint;
+    handles.cp = prelimPoint;
 else
-    state.cp = [];
+    handles.cp = [];
 end
 
-if state.isAdd
-    masterData = get(gcf,'UserData'); %Gets the data struct
+if handles.isAdd
     next = size(masterData(1).VALL,1);
-    masterData(1).VALL{next+1} = state.cp;
+    masterData(1).VALL{next+1} = handles.cp;
     hold on;
     displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
         masterData(1).EALL, 'on');
@@ -95,45 +98,44 @@ if state.isAdd
     zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
     set(gca, 'XLim', [zoomStartX zoomStopX])
     set(gca, 'YLim', [zoomStartY zoomStopY])
-    state.isAdd = 0;
-    set(gca,'UserData',state)
-    set(gcf,'UserData',masterData);
+    handles.isAdd = 0;
+    handles.masterData = masterData;
+    guidata(hObject,handles)
     return;
 end
 
-masterData = get(gcf,'UserData'); %Gets the data struct
-%state.vertexIndex = eucDistance(masterData(1).VALL,state.cp); %Finds nearest vertex
-VALL = masterData(1).VALL;
-vertexIndex = eucDistance(VALL,state.cp);
-state.vertexIdx = vertexIndex;
+% Finds nearest vertex
+vertexIndex = eucDistance(masterData(1).VALL,handles.cp);
+handles.vertexIdx = vertexIndex;
 
-set(gca,'UserData',state)
-display(state.vertexIdx)
+%set(gca,'UserData',state)
+display(handles.vertexIdx)
 
 hold on;
 displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-    masterData(1).EALL, 'on', state.vertexIdx);
+    masterData(1).EALL, 'on', handles.vertexIdx);
+guidata(hObject,handles)
 
-function trackPoint(~, ~)
-    %global ALL;
-     s = get(gca, 'UserData');
-     if s.vertexIdx ~= -1
+function trackPoint(hObject,eventdata)
+     handles = guidata(hObject);
+     if handles.vertexIdx ~= -1
          %move point here
          newcp = get(gca,'CurrentPoint');
          newcp = newcp(1, 1:2)';
-         masterData = get(gcf,'UserData'); %Gets the data struct
-         masterData(1).VALL{s.vertexIdx} = newcp;
+         masterData = handles.masterData; %Gets the data struct
+         masterData(1).VALL{handles.vertexIdx} = newcp;
 %          fprintf('hello');
 %          displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
 %             masterData(1).EALL, 'on', s.vertexIdx);
 %        move spline endpoints
         %idk why there are 10000000 vertices
      end
+guidata(hObject,handles)
      
- function stopTracking(~, ~)
-        s = get(gca, 'UserData');
-        s.vertexIdx = -1;
-        set(gca, 'UserData', s);
+ function stopTracking(hObject,eventdata)
+        handles = guidata(hObject);
+        handles.vertexIdx = -1;
+        guidata(hObject,handles)
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
@@ -153,8 +155,8 @@ function showGT_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global ALL;
 frame = str2double(get(handles.frame,'String'));
-masterData = get(gcf,'UserData');
-H = displayGraph(ALL(:,:,frame), masterData(frame).VALL, masterData(frame).EALL, 'on');
+handles = guidata(hObject);
+H = displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
 zoomStartX = 20; zoomStopX = size(ALL(:,:,1),2)-19;
 zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
 set(gca, 'XLim', [zoomStartX zoomStopX])
@@ -181,16 +183,14 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
 % --- Executes on button press in add_element.
 function add_element_Callback(hObject, eventdata, handles)
 % hObject    handle to add_element (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-s = get(gca, 'UserData');
-s.isAdd = 1;
-set(gca, 'UserData', s);
-
+handles = guidata(hObject);
+handles.isAdd = 1;
+guidata(hObject,handles)
 
 % --- Executes on button press in showRaw.
 function showRaw_Callback(hObject, eventdata, handles)
@@ -200,7 +200,6 @@ function showRaw_Callback(hObject, eventdata, handles)
 global ALL;
 frame = str2double(get(handles.frame,'String'));
 imagesc(ALL(:,:,frame));
-
 
 % --------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
@@ -228,3 +227,8 @@ function pushbutton7_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton7 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+prompt = {'Starting frame:','Ending frame:'};
+dlg_title = 'Tracking Options'; num_lines = 1; defaultans = {'1','2'};
+handles = guidata(hObject);
+handles.answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+guidata(hObject,handles)
