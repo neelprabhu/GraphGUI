@@ -50,35 +50,27 @@ handles.output = hObject;
 
 % Update handles structure
 global getOUT;
-hold on;
 handles.masterData = transfer(getOUT);
 set(handles.frame,'String','1');
-guidata(hObject, handles);
 
 %% Code for tracking mouse movements and clicks
-% state.WindowButtonDownFcn = get(gcf, 'WindowButtonDownFcn');
-% state.WindowButtonMotionFcn = get(gcf, 'WindowButtonMotionFcn');
-% state.WindowButtonUpFcn = get(gcf, 'WindowButtonUpFcn');
-handles = guidata(hObject);
+
 handles.vertexIdx = -1;
 handles.isAdd = 0;
 guidata(hObject,handles)
-%set(gcf,'UserData',handles.masterData)
-showGT_Callback(handles.showGT,eventdata,handles);
-set(gca,'Visible','off')
 
-%set(gca, 'UserData', state);
-axes(handles.axes1)
+showGT_Callback(handles.showGT,eventdata,handles); %Initializes window
+set(gca,'Visible','off') %Turns off axes
+
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
 
-function selectPoint(hObject, eventdata) %When mouse is clicked
+function selectPoint(hObject, eventdata) % When mouse is clicked
 global ALL;
 
 handles = guidata(hObject);
 masterData = handles.masterData;
-%state = get(gca, 'UserData');
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2)';
 
