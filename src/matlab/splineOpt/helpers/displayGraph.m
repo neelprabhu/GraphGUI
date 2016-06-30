@@ -18,10 +18,6 @@ if nargin < 4 || isempty(visible)
     visible = 'on';
 end
 
-if nargin < 5 || isempty(newV)
-    newV = [];
-end
-
 % get lengths
 N = length(V);
 M = length(E);
@@ -56,9 +52,9 @@ for ii=1:M
     
     % draw the spline and the sample points on it
     if ~isempty(si)
-        line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 4)
-        line(si.control(1, :), si.control(2, :), ...
-            'Marker', '.', 'MarkerSize', 20, 'Color', 'b');
+        line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 3)
+        %line(si.control(1, :), si.control(2, :), ...
+            %'Marker', '.', 'MarkerSize', 20, 'Color', 'b');
     end
     
 end
