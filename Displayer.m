@@ -115,6 +115,7 @@ displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
 guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
+    global ALL;
      handles = guidata(hObject);
      if handles.vertexIdx ~= -1
          %move point here
@@ -123,10 +124,31 @@ function trackPoint(hObject,eventdata)
          masterData = handles.masterData; %Gets the data struct
          masterData(1).VALL{handles.vertexIdx} = newcp;
 %          fprintf('hello');
-%          displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-%             masterData(1).EALL, 'on', s.vertexIdx);
+%           displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+%              masterData(1).EALL, 'on');
 %        move spline endpoints
-        %idk why there are 10000000 vertices
+        edge = masterData(1).ADJLIST{handles.vertexIdx};
+        edgeSize = size(edge);
+        for i = 1:edgeSize(2)
+            splineNum = edge(2,i);
+            spline1 = masterData(1).EALL{splineNum};
+            splineIdx = 1;
+            minn = 1000;
+            controls = spline1.control;
+            for j = 1: length(controls)
+                spl = controls(:, j);
+                subb = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2))
+                if subb < minn
+                    minn = subb;
+                    splineIdx = j;
+                end
+            end
+            controls(:,splineIdx) = newcp;
+            masterData(1).EALL{splineNum}.control = controls;
+            
+            displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+              masterData(1).EALL, 'on');            
+        end
      end
 guidata(hObject,handles)
      

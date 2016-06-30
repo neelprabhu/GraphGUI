@@ -36,13 +36,13 @@ if isempty(newV)
     axis equal;
 end
 
-if ~isempty(newV)
-    v_new = V{newV};
-    h = plot(v_new(1), v_new(2),'go',...
-            'MarkerSize',9,...
-            'MarkerEdgeColor','b',...
-            'MarkerFaceColor','b');
-else
+ if ~isempty(newV)
+     v_new = V{newV};
+     h = plot(v_new(1), v_new(2),'go',...
+             'MarkerSize',9,...
+             'MarkerEdgeColor','b',...
+             'MarkerFaceColor','b');
+ else
     state = get(gca,'UserData');
     state.pointStruct = cell(size(V,1),1);
     for ii=1:N
@@ -59,7 +59,7 @@ else
         end
     end
     set(gca,'UserData',state)
-end
+ end
 
 % draw the splines
 if isempty(newV)
