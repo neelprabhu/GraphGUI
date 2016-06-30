@@ -60,6 +60,7 @@ handles.vertexIdx = -1;
 handles.isAdd = 0;
 handles.zStX = 20; handles.zStoX = size(ALL(:,:,1),2)-19;
 handles.zStY = 20; handles.zStoY = size(ALL(:,:,1),1)-19;
+handles.prevIdx = 1;
 guidata(hObject,handles)
 
 showGT_Callback(handles.showGT,eventdata,handles); %Initializes window
@@ -92,9 +93,10 @@ end
 if handles.isAdd
     next = size(masterData(1).VALL,1);
     masterData(1).VALL{next+1} = handles.cp;
+    masterData(1).ADJLIST{next
     hold on;
-    displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-        masterData(1).EALL, 'on');
+    [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(ALL(:,:,1), ...
+        masterData(1).VALL, masterData(1).EALL, 'on');
     set(gca, 'XLim', [handles.zStX handles.zStoX])
     set(gca, 'YLim', [handles.zStY handles.zStoY])
     handles.isAdd = 0; handles.masterData = masterData;
@@ -110,8 +112,11 @@ handles.vertexIdx = nearestNeighbor(handles.DT,handles.cp);
 display(handles.vertexIdx)
 
 hold on;
-displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-    masterData(1).EALL, 'on', handles.vertexIdx);
+vProps = handles.vH{handles.vertexIdx};
+vprevProps = handles.vH{handles.prevIdx};
+set(vprevProps,'MarkerEdgeColor','r','MarkerFaceColor','r')
+set(vProps,'MarkerEdgeColor','g','MarkerFaceColor','g')
+handles.prevIdx = handles.vertexIdx; %Sets previous vertex equal to current
 guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
@@ -143,16 +148,16 @@ if handles.vertexIdx ~= -1
         end
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
-        
-        displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-            masterData(1).EALL, 'on');
         set(gca, 'XLim', [handles.zStX handles.zStoX])
         set(gca, 'YLim', [handles.zStY handles.zStoY])
         handles.masterData = masterData;
+        handles.DT = setVoronoi(handles);
+        guidata(hObject,handles)
     end
+    vH = handles.vH; vProp = vH{handles.vertexIdx};
+    set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
- handles.DT = setVoronoi(handles);
-guidata(hObject,handles)
+
 
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
@@ -178,9 +183,12 @@ function showGT_Callback(hObject, eventdata, handles)
 global ALL;
 frame = str2double(get(handles.frame,'String'));
 handles = guidata(hObject);
-H = displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
+mD = handles.masterData;
+[handles.vH,handles.eH,handles.cpH] = customdisplayGraph(ALL(:,:,frame), ...
+    mD(frame).VALL, mD(frame).EALL, 'on');
 set(gca, 'XLim', [handles.zStX handles.zStoX])
 set(gca, 'YLim', [handles.zStY handles.zStoY])
+guidata(hObject,handles)
 
 function frame_Callback(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
