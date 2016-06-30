@@ -95,17 +95,10 @@ if handles.isAdd
     masterData(1).VALL{next+1} = handles.cp;
     masterData(1).ADJLIST{next+1} = [];
     hold on;
-<<<<<<< HEAD
-    [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(ALL(:,:,1), ...
-        masterData(1).VALL, masterData(1).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX])
-    set(gca, 'YLim', [handles.zStY handles.zStoY])
-=======
     [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(ALL(:,:,1), masterData(1).VALL,  ...
         masterData(1).EALL, 'on');
     set(gca, 'XLim', [handles.zStX handles.zStoX]);
     set(gca, 'YLim', [handles.zStY handles.zStoY]);
->>>>>>> bd4e05236876f0508ff0cd8ef21e432aa7bd07bb
     handles.isAdd = 0; handles.masterData = masterData;
     handles.DT = setVoronoi(handles);
     guidata(hObject,handles)
