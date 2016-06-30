@@ -50,6 +50,7 @@ handles.output = hObject;
 
 % Update handles structure
 global getOUT;
+global ALL;
 handles.masterData = transfer(getOUT);
 set(handles.frame,'String','1');
 
@@ -57,6 +58,8 @@ set(handles.frame,'String','1');
 
 handles.vertexIdx = -1;
 handles.isAdd = 0;
+handles.zStX = 20; handles.zStoX = size(ALL(:,:,1),2)-19;
+handles.zStY = 20; handles.zStoY = size(ALL(:,:,1),1)-19;
 guidata(hObject,handles)
 
 showGT_Callback(handles.showGT,eventdata,handles); %Initializes window
@@ -66,15 +69,21 @@ set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
 
+%% Sets up initial Voronoi diagram of vertices
+
+handles = guidata(hObject);
+handles.DT = setVoronoi(handles);
+guidata(hObject,handles)
+
 function selectPoint(hObject, eventdata) % When mouse is clicked
 global ALL;
 
 handles = guidata(hObject);
 masterData = handles.masterData;
 prelimPoint = get(gca,'CurrentPoint');
-prelimPoint = prelimPoint(1,1:2)';
+prelimPoint = prelimPoint(1,1:2);
 
-if prelimPoint(1) > 20 && prelimPoint(2)>20
+if prelimPoint(1) > 20 && prelimPoint(2) > 20
     handles.cp = prelimPoint;
 else
     handles.cp = [];
@@ -86,25 +95,16 @@ if handles.isAdd
     hold on;
     displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
         masterData(1).EALL, 'on');
-    zoomStartX = 20; zoomStopX = size(ALL(:,:,1),2)-19;
-    zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
-    set(gca, 'XLim', [zoomStartX zoomStopX])
-    set(gca, 'YLim', [zoomStartY zoomStopY])
-% <<<<<<< HEAD
-%     state.isAdd = 0;
-%     set(gcf, 'UserData', masterData);
-%     set(gca,'UserData',state)
-%     set(gcf,'UserData',masterData);
-% =======
-    handles.isAdd = 0;
-    handles.masterData = masterData;
+    set(gca, 'XLim', [handles.zStX handles.zStoX])
+    set(gca, 'YLim', [handles.zStY handles.zStoY])
+    handles.isAdd = 0; handles.masterData = masterData;
+    handles.DT = setVoronoi(handles);
     guidata(hObject,handles)
     return;
 end
 
 % Finds nearest vertex
-vertexIndex = eucDistance(masterData(1).VALL,handles.cp);
-handles.vertexIdx = vertexIndex;
+handles.vertexIdx = nearestNeighbor(handles.DT,handles.cp);
 
 %set(gca,'UserData',state)
 display(handles.vertexIdx)
@@ -114,12 +114,6 @@ displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
     masterData(1).EALL, 'on', handles.vertexIdx);
 guidata(hObject,handles)
 
-% <<<<<<< HEAD
-% function trackPoint(~, ~)
-%     global ALL;
-%      s = get(gca, 'UserData');
-%      if s.vertexIdx ~= -1
-% =======
 function trackPoint(hObject,eventdata)
     global ALL;
      handles = guidata(hObject);
@@ -155,9 +149,6 @@ function trackPoint(hObject,eventdata)
             displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
               masterData(1).EALL, 'on');            
         end
-        
-        
-        %idk why there are 10000000 vertices
      end
 guidata(hObject,handles)
      
@@ -186,10 +177,8 @@ global ALL;
 frame = str2double(get(handles.frame,'String'));
 handles = guidata(hObject);
 H = displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
-zoomStartX = 20; zoomStopX = size(ALL(:,:,1),2)-19;
-zoomStartY = 20; zoomStopY = size(ALL(:,:,1),1)-19;
-set(gca, 'XLim', [zoomStartX zoomStopX])
-set(gca, 'YLim', [zoomStartY zoomStopY])
+set(gca, 'XLim', [handles.zStX handles.zStoX])
+set(gca, 'YLim', [handles.zStY handles.zStoY])
 
 function frame_Callback(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
