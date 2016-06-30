@@ -21,11 +21,11 @@ function varargout = Displayer(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @Displayer_OpeningFcn, ...
-                   'gui_OutputFcn',  @Displayer_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @Displayer_OpeningFcn, ...
+    'gui_OutputFcn',  @Displayer_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -60,6 +60,7 @@ handles.vertexIdx = -1;
 handles.isAdd = 0;
 handles.zStX = 20; handles.zStoX = size(ALL(:,:,1),2)-19;
 handles.zStY = 20; handles.zStoY = size(ALL(:,:,1),1)-19;
+handles.prevIdx = 1;
 guidata(hObject,handles)
 
 showGT_Callback(handles.showGT,eventdata,handles); %Initializes window
@@ -110,55 +111,65 @@ handles.vertexIdx = nearestNeighbor(handles.DT,handles.cp);
 display(handles.vertexIdx)
 
 hold on;
-displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-    masterData(1).EALL, 'on', handles.vertexIdx);
+vProps = handles.vH{handles.vertexIdx};
+vprevProps = handles.vH{handles.prevIdx};
+set(vprevProps,'MarkerEdgeColor','r','MarkerFaceColor','r')
+set(vProps,'MarkerEdgeColor','g','MarkerFaceColor','g')
+handles.prevIdx = handles.vertexIdx; %Sets previous vertex equal to current
 guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
-    global ALL;
-     handles = guidata(hObject);
-     if handles.vertexIdx ~= -1
-         %move point here
-         newcp = get(gca,'CurrentPoint');
-         newcp = newcp(1, 1:2)';
-         masterData = handles.masterData; %Gets the data struct
-         masterData(1).VALL{handles.vertexIdx} = newcp;
-%          fprintf('hello');
-%           displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-%              masterData(1).EALL, 'on');
-%        move spline endpoints
-        edge = masterData(1).ADJLIST{handles.vertexIdx};
-        edgeSize = size(edge);
-        for i = 1:edgeSize(2)
-            splineNum = edge(2,i);
-            spline1 = masterData(1).EALL{splineNum};
-            splineIdx = 1;
-            minn = 1000;
-            controls = spline1.control;
-            for j = 1: length(controls)
-                spl = controls(:, j);
-                subb = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2))
-                if subb < minn
-                    minn = subb;
-                    splineIdx = j;
-                end
-            end
-            controls(:,splineIdx) = newcp;
-            masterData(1).EALL{splineNum}.control = controls;
-            handles.masterData = masterData;
-            displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-              masterData(1).EALL, 'on');            
+global ALL;
+handles = guidata(hObject);
+if handles.vertexIdx ~= -1
+    %move point here
+    newcp = get(gca,'CurrentPoint');
+    newcp = newcp(1, 1:2)';
+    masterData = handles.masterData; %Gets the data struct
+    masterData(1).VALL{handles.vertexIdx} = newcp;
+    
+    edge = masterData(1).ADJLIST{handles.vertexIdx};
+    edgeSize = size(edge);
+    for i = 1:edgeSize(2)
+        splineNum = edge(2,i);
+        spline1 = masterData(1).EALL{splineNum};
+        splineIdx = 1;
+        minn = 1000;
+        controls = spline1.control;
+        for j = 1: length(controls)
+            spl = controls(:, j);
+            subb = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + ...
+                abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2));
+            if subb < minn
+                minn = subb;
+                splineIdx = j;
+            end          
         end
-     end
-guidata(hObject,handles)
-     
- function stopTracking(hObject,eventdata)
-        handles = guidata(hObject);
-        handles.vertexIdx = -1;
+        controls(:,splineIdx) = newcp;
+        masterData(1).EALL{splineNum}.control = controls;
+        
+        vH = handles.vH;
+        vProp = vH{handles.vertexIdx};
+        set(vProp, 'XData', newcp(1));
+        set(vProp, 'YData', newcp(2));
+        
+        
+        set(gca, 'XLim', [handles.zStX handles.zStoX])
+        set(gca, 'YLim', [handles.zStY handles.zStoY])
+        handles.masterData = masterData;
+        handles.DT = setVoronoi(handles);
         guidata(hObject,handles)
+    end
+end
+
+
+function stopTracking(hObject,eventdata)
+handles = guidata(hObject);
+handles.vertexIdx = -1;
+guidata(hObject,handles)
 
 % --- Outputs from this function are returned to the command line.
-function varargout = Displayer_OutputFcn(hObject, eventdata, handles) 
+function varargout = Displayer_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -176,9 +187,12 @@ function showGT_Callback(hObject, eventdata, handles)
 global ALL;
 frame = str2double(get(handles.frame,'String'));
 handles = guidata(hObject);
-H = displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
+mD = handles.masterData;
+[handles.vH,handles.eH,handles.cpH] = customdisplayGraph(ALL(:,:,frame), ...
+    mD(frame).VALL, mD(frame).EALL, 'on');
 set(gca, 'XLim', [handles.zStX handles.zStoX])
 set(gca, 'YLim', [handles.zStY handles.zStoY])
+guidata(hObject,handles)
 
 function frame_Callback(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
