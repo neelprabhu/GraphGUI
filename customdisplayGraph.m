@@ -54,9 +54,9 @@ for ii=1:M
     
     % draw the spline and the sample points on it
     if ~isempty(si)
-        eH{ii} = line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 4);
-%         epH{ii} = line(si.control(1, :), si.control(2, :), ...
-%             'Marker', '.', 'MarkerSize', 20, 'Color', 'b');
+        eH{ii} = line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 3);
+        %cpH{ii} = line(si.control(1, :), si.control(2, :), ...
+            %'Marker', '.', 'MarkerSize', 20, 'Color', 'b');
     end
     
 end
