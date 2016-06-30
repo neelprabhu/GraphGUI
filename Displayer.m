@@ -145,7 +145,7 @@ function trackPoint(hObject,eventdata)
             end
             controls(:,splineIdx) = newcp;
             masterData(1).EALL{splineNum}.control = controls;
-            
+            handles.masterData = masterData;
             displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
               masterData(1).EALL, 'on');            
         end
