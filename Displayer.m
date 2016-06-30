@@ -116,7 +116,7 @@ displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
     masterData(1).EALL, 'on', state.vertexIdx);
 
 function trackPoint(~, ~)
-    %global ALL;
+    global ALL;
      s = get(gca, 'UserData');
      if s.vertexIdx ~= -1
          %move point here
@@ -125,9 +125,33 @@ function trackPoint(~, ~)
          masterData = get(gcf,'UserData'); %Gets the data struct
          masterData(1).VALL{s.vertexIdx} = newcp;
 %          fprintf('hello');
-%          displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-%             masterData(1).EALL, 'on', s.vertexIdx);
+%           displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+%              masterData(1).EALL, 'on');
 %        move spline endpoints
+        edge = masterData(1).ADJLIST{s.vertexIdx};
+        edgeSize = size(edge);
+        for i = 1:edgeSize(2)
+            splineNum = edge(2,i);
+            spline1 = masterData(1).EALL{splineNum};
+            splineIdx = 1;
+            minn = 1000;
+            controls = spline1.control;
+            for j = 1: length(control)
+                spl = controls(:, j);
+                subb = abs(spl(1) - masterData(1).VALL{s.vertexIdx}(1)) + abs (spl(2) - masterData(1).VALL{s.vertexIdx}(2))
+                if subb < minn
+                    minn = subb;
+                    splineIdx = j;
+                end
+            end
+            controls(:,splineIdx) = newcp;
+            masterData(1).EALL{splineNum}.control = controls;
+            
+            displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+              masterData(1).EALL, 'on');            
+        end
+        
+        
         %idk why there are 10000000 vertices
      end
      
