@@ -148,8 +148,10 @@ if handles.vertexIdx ~= -1
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
         
-        displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-            masterData(1).EALL, 'on');
+        vH = handles.vH; vProp = vH{handles.vertexIdx};
+        set(vProp,'XData',newcp(1),'YData',newcp(2))
+        %displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+            %masterData(1).EALL, 'on');
         set(gca, 'XLim', [handles.zStX handles.zStoX])
         set(gca, 'YLim', [handles.zStY handles.zStoY])
         handles.masterData = masterData;
