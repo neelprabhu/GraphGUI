@@ -95,10 +95,17 @@ if handles.isAdd
     masterData(1).VALL{next+1} = handles.cp;
     masterData(1).ADJLIST{next+1} = [];
     hold on;
+<<<<<<< HEAD
     [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(ALL(:,:,1), ...
         masterData(1).VALL, masterData(1).EALL, 'on');
     set(gca, 'XLim', [handles.zStX handles.zStoX])
     set(gca, 'YLim', [handles.zStY handles.zStoY])
+=======
+    [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(ALL(:,:,1), masterData(1).VALL,  ...
+        masterData(1).EALL, 'on');
+    set(gca, 'XLim', [handles.zStX handles.zStoX]);
+    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+>>>>>>> bd4e05236876f0508ff0cd8ef21e432aa7bd07bb
     handles.isAdd = 0; handles.masterData = masterData;
     handles.DT = setVoronoi(handles);
     guidata(hObject,handles)
@@ -140,18 +147,16 @@ if handles.vertexIdx ~= -1
             if subb < minn
                 minn = subb;
                 splineIdx = j;
-            end
+            end          
         end
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
     end
-    
-
     set(gca, 'XLim', [handles.zStX handles.zStoX])
     set(gca, 'YLim', [handles.zStY handles.zStoY])
     handles.masterData = masterData;
     handles.DT = setVoronoi(handles);
-    guidata(hObject,handles)
+    guidata(hObject,handles);
     vH = handles.vH; vProp = vH{handles.vertexIdx};
     set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
