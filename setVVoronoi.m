@@ -9,7 +9,9 @@ vMatrix = zeros(numel(VALL),2);
 
 for n = 1:numel(VALL)
     VALL{n} = VALL{n}';
-    vMatrix(n,:) = VALL{n};
+    if ~isempty(VALL{n})
+        vMatrix(n,:) = VALL{n};
+    end
 end
     
 dt = delaunayTriangulation(vMatrix);
