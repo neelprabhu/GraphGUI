@@ -37,18 +37,13 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before Displayer is made visible.
+
 function Displayer_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to Displayer (see VARARGIN)
 
 % Choose default command line output for Displayer
 handles.output = hObject;
 
-% Update handles structure
+% Get masterData, initialize
 global getOUT;
 global ALL;
 handles.masterData = transfer(getOUT);
@@ -56,29 +51,32 @@ set(handles.frame,'String','1');
 
 %% Code for tracking mouse movements and clicks
 
-handles.vertexIdx = -1;
-handles.isAdd = 0;
+% Parameters into handles
+handles.vertexIdx = -1; % No vertex selected default
+handles.isAdd = 0; % Not adding element default
 handles.zStX = 20; handles.zStoX = size(ALL(:,:,1),2)-19;
 handles.zStY = 20; handles.zStoY = size(ALL(:,:,1),1)-19;
-handles.prevIdx = 1;
+handles.prevVIdx = 1;
+handles.prevEIdx = 1;
 guidata(hObject,handles)
 
-showGT_Callback(handles.showGT,eventdata,handles); %Initializes window
+showGraph_Callback(handles.showGraph,eventdata,handles); % Initializes window
 set(gca,'Visible','off') %Turns off axes
 
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
 
-%% Sets up initial Voronoi diagram of vertices
+%% Sets up initial Voronoi diagram of vertices and edge midpoints
 
 handles = guidata(hObject);
-handles.DT = setVoronoi(handles);
+handles.vDT = setVVoronoi(handles);
+handles.eDT = setEVoronoi(handles);
 guidata(hObject,handles)
 
-function selectPoint(hObject, eventdata) % When mouse is clicked
+function selectPoint(hObject,eventdata) % When mouse is clicked
 global ALL;
-
+    
 handles = guidata(hObject);
 masterData = handles.masterData;
 prelimPoint = get(gca,'CurrentPoint');
@@ -100,26 +98,44 @@ if handles.isAdd
     set(gca, 'XLim', [handles.zStX handles.zStoX]);
     set(gca, 'YLim', [handles.zStY handles.zStoY]);
     handles.isAdd = 0; handles.masterData = masterData;
-    handles.DT = setVoronoi(handles);
+    handles.vDT = setVVoronoi(handles);
     guidata(hObject,handles)
     return;
 end
 
 % Finds nearest vertex
-handles.vertexIdx = nearestNeighbor(handles.DT,handles.cp);
+[handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
+[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
 
-hold on;
 vProps = handles.vH{handles.vertexIdx};
-vprevProps = handles.vH{handles.prevIdx};
-set(vprevProps,'MarkerEdgeColor','r','MarkerFaceColor','r')
-set(vProps,'MarkerEdgeColor','g','MarkerFaceColor','g')
-handles.prevIdx = handles.vertexIdx; %Sets previous vertex equal to current
-guidata(hObject,handles)
+vprevProps = handles.vH{handles.prevVIdx};
+eProps = handles.eH{handles.edgeIdx};
+eprevProps = handles.eH{handles.prevEIdx};
+cProps = handles.cpH{handles.edgeIdx};
+cprevProps = handles.cpH{handles.prevEIdx};
+
+if handles.vD < handles.eD
+    hold on;
+    set(vprevProps,'MarkerEdgeColor','r','MarkerFaceColor','r')
+    set(eprevProps,'Color','y')
+    set(cprevProps,'Visible','off')
+    set(vProps,'MarkerEdgeColor','g','MarkerFaceColor','g')
+    handles.prevVIdx = handles.vertexIdx; %Sets previous vertex equal to current
+    guidata(hObject,handles)
+else
+    hold on;
+    set(eprevProps,'Color','y')
+    set(cprevProps,'Visible','off')
+    set(vprevProps,'MarkerEdgeColor','r','MarkerFaceColor','r')
+    set(eProps,'Color','g')
+    set(cProps,'Visible','on')
+    handles.prevEIdx = handles.edgeIdx;
+    guidata(hObject,handles)
+end
 
 function trackPoint(hObject,eventdata)
-global ALL;
 handles = guidata(hObject);
-if handles.vertexIdx ~= -1
+if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     %move point here
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
@@ -146,11 +162,10 @@ if handles.vertexIdx ~= -1
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
     end
-      set(gca, 'XLim', [handles.zStX handles.zStoX])
-      set(gca, 'YLim', [handles.zStY handles.zStoY])
-      handles.masterData = masterData;
-      handles.DT = setVoronoi(handles);
-      guidata(hObject,handles);
+    set(gca, 'XLim', [handles.zStX handles.zStoX])
+    set(gca, 'YLim', [handles.zStY handles.zStoY])
+    handles.masterData = masterData;
+    guidata(hObject,handles);
     vH = handles.vH; vProp = vH{handles.vertexIdx};
     set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
@@ -159,6 +174,7 @@ end
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
 handles.vertexIdx = -1;
+handles.DT = setVVoronoi(handles);
 guidata(hObject,handles)
 
 % --- Outputs from this function are returned to the command line.
@@ -172,14 +188,20 @@ function varargout = Displayer_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in showGT.
-function showGT_Callback(hObject, eventdata, handles)
-% hObject    handle to showGT (see GCBO)
+% --- Executes on button press in showGraph.
+function showGraph_Callback(hObject, eventdata, handles)
+% hObject    handle to showGraph (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global ALL;
-frame = str2double(get(handles.frame,'String'));
 handles = guidata(hObject);
+
+if isempty(ALL) % If ALL is empty, run GraphGUI to get image.
+    fprintf('*****Please use GraphGUI to load your image first.*****\n')
+    close(handles.figure1)
+end
+
+frame = str2double(get(handles.frame,'String'));
 mD = handles.masterData;
 [handles.vH,handles.eH,handles.cpH] = customdisplayGraph(ALL(:,:,frame), ...
     mD(frame).VALL, mD(frame).EALL, 'on');
@@ -247,9 +269,9 @@ function Untitled_5_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in pushbutton7.
-function pushbutton7_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton7 (see GCBO)
+% --- Executes on button press in open_track.
+function open_track_Callback(hObject, eventdata, handles)
+% hObject    handle to open_track (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 prompt = {'Starting frame:','Ending frame:'};
