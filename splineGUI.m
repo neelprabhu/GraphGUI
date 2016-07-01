@@ -1,21 +1,45 @@
-function splineGUI(control)
-%nctr = 5; 
+function splineGUI(spl, img)
 
+if nargin < 2 || isempty(img)
+    state.image = false;
+else
+    [x y] = round(size(img));
+    state.image = true;
+end
 
-%control = [1:nctr; zeros(1, nctr)];
+state.d = spl;
+state.np = size(state.d.control, 2);
 
-state.handles = example(control);
-state.d.control = control;
-state.d.open = true;
+if state.image
+    state.scale = 20;
+    state.d = splineAffineXform(state.d, (state.scale - 1) * eye(2), [x; y]);
+    
+    if ~exist('grad.m', 'file')
+        upath = sprintf('%cUsers%ccarlo%cDropbox%cDocuments%cCode%cmatlab%cUTILS', ...
+            filesep, filesep, filesep, filesep, filesep, filesep, filesep);
+        addpath(genpath(upath))
+    end
+    
+    % Compute the magnitude of the image gradient
+    sigma = 2;
+    state.gradImg = grad(img, sigma);
+    state.gradImg = sqrt(state.gradImg{1}.^2 + state.gradImg{2}.^2);
+else
+    state.scale = 1;
+end
 
+hold off
+if state.image
+    imshow(img);
+    hold on
+end
+state.handles = splineDraw(state.d);
 axis ij
 axis off
 state = redraw(state);
 
 state.pointIdx = 0;
 state.cp = NaN;
-state.np = size(state.d.control, 2);
-state.scale = 1;
 
 zoom off;
 
@@ -31,6 +55,8 @@ set(gcf, 'WindowButtonUpFcn', @stopTracking);
 set(gcf, 'CloseRequestFcn', @closeFigure);
 set(gcf, 'KeyPressFcn', @cleanup);
 
+% Save the state with the current axes, so different axes can have
+% different GUIs
 set(gca, 'UserData', state);
 
     function selectPoint(~, ~)
@@ -55,7 +81,7 @@ set(gca, 'UserData', state);
                     % First and last point do not move
                     return
                 end
-                %s.d = splineEvalEven(s.d, true, true, s.image);
+                s.d = splineEvalEven(s.d, true, true, s.image);
                 s = redraw(s);
                 set(gca, 'UserData', s);
             end
@@ -69,14 +95,10 @@ set(gca, 'UserData', state);
     end
 
     function s = redraw(s)
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-        %splineDraw(s.d, s.handles);
-        example(s.d.control);
-       % if s.image
-       %     title(matchQuality(s.d, s.gradImg))
-       % end
+        splineDraw(s.d, s.handles);
+        if s.image
+            title(matchQuality(s.d, s.gradImg))
+        end
     end
 
     function cleanup(~, ~)

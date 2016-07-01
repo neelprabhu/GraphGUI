@@ -145,20 +145,24 @@ if handles.addEdge ==2
     makeNeedles = false;
     
     s = splineMake(control, order, mult, open, n, makeNeedles);
-   
-                                   
+    tmp = 
+    masterData(1).ADJLIST{handles.addE(1),1} = [masterData(1).ADJLIST{handles.addE(1),1},...
+                                                tmp];
+                                            
+     masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1};...
+                                                masterData(1).VALL{handles.addE(2),1}];                                       
     %splineGUI(s);
     
    % m =  load('savedSpline.1.mat');
     next = size(masterData(1).EALL,1);
     masterData(1).VALL{next+1} = s;
     
-    tmp = [handles.addE(2);next+1];
+    tmp = [;next+1];
     masterData(1).ADJLIST{handles.addE(1),1} = [masterData(1).ADJLIST{handles.addE(1),1},...
                                                 tmp];
-     tmp = [handles.addE(1);next+1];                                       
-     masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
-                                                tmp];   
+                                            
+     masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1};...
+                                                masterData(1).VALL{handles.addE(2),1}];   
     hold on;
     displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
         masterData(1).EALL, 'on');

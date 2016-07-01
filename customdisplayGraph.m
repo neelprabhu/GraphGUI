@@ -1,15 +1,15 @@
-function f = displayGraph(I, V, E, visible)
+function [vH,eH,cpH] = customdisplayGraph(I, V, E, visible)
 %DISPLAYGRAPH Displays graph with splines and vertices
-%
+% 
 % INPUTS
 % I: (2D matrix) image.
 % V: cell array of 2D vectors of vertices.
 % Splines: cell array of spline structs.
 % visible: {'on (default)', 'off'} whether the figure is visible.
-%
+% 
 % OUTPUTS
-% f: figure handle.
-%
+% H: Plot handle
+% 
 % @author Roger Zou
 % @date 5/19/15
 
@@ -23,13 +23,13 @@ N = length(V);
 M = length(E);
 
 % setup figure
-f = 5;
 hold on;
 imagesc(I)
 colormap gray
 set(gca,'visible','off')
 axis equal;
 
+vH = cell(size(V,1),1);
 for ii=1:N
     
     % get current vertex
@@ -37,13 +37,15 @@ for ii=1:N
     
     % draw the vertices
     if ~sum(isnan(v_i))
-        state.pointStruct{ii} = plot(v_i(1), v_i(2),'go',...
+        vH{ii} = plot(v_i(1), v_i(2),'ro',...
             'MarkerSize',9,...
             'MarkerEdgeColor','r',...
             'MarkerFaceColor','r');
     end
 end
 
+eH = cell(size(E,1),1);
+cpH = cell(100,1);
 % draw the splines
 for ii=1:M
     
@@ -52,8 +54,8 @@ for ii=1:M
     
     % draw the spline and the sample points on it
     if ~isempty(si)
-        line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 3)
-        %line(si.control(1, :), si.control(2, :), ...
+        eH{ii} = line(si.curve(1,:), si.curve(2,:), 'Color', 'y', 'LineWidth', 3);
+        %cpH{ii} = line(si.control(1, :), si.control(2, :), ...
             %'Marker', '.', 'MarkerSize', 20, 'Color', 'b');
     end
     
