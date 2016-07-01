@@ -56,8 +56,8 @@ handles.vertexIdx = -1; % No vertex selected default
 handles.isAdd = 0; % Not adding element default
 handles.zStX = 20; handles.zStoX = size(ALL(:,:,1),2)-19;
 handles.zStY = 20; handles.zStoY = size(ALL(:,:,1),1)-19;
-handles.prevVIdx = 1;
-handles.prevEIdx = 1;
+handles.prevVIdx = 1; handles.onV = false;
+handles.prevEIdx = 1; handles.onE = false;
 guidata(hObject,handles)
 
 showGraph_Callback(handles.showGraph,eventdata,handles); % Initializes window
@@ -66,6 +66,7 @@ set(gca,'Visible','off') %Turns off axes
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
+set(gcf, 'KeyPressFcn', @deleteElement);
 
 %% Sets up initial Voronoi diagram of vertices and edge midpoints
 
@@ -106,6 +107,9 @@ end
 % Finds nearest vertex
 [handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
 [handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
+handles.vIndex = handles.vertexIdx;
+handles.eIndex = handles.edgeIdx;
+guidata(hObject,handles)
 
 vProps = handles.vH{handles.vertexIdx};
 vprevProps = handles.vH{handles.prevVIdx};
@@ -121,6 +125,8 @@ if handles.vD < handles.eD
     set(cprevProps,'Visible','off')
     set(vProps,'MarkerEdgeColor','g','MarkerFaceColor','g')
     handles.prevVIdx = handles.vertexIdx; %Sets previous vertex equal to current
+    handles.onE = false;
+    handles.onV = true;
     guidata(hObject,handles)
 else
     hold on;
@@ -130,6 +136,8 @@ else
     set(eProps,'Color','g')
     set(cProps,'Visible','on')
     handles.prevEIdx = handles.edgeIdx;
+    handles.onE = true;
+    handles.onV = false;
     guidata(hObject,handles)
 end
 
@@ -170,12 +178,55 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
 
-
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
 handles.vertexIdx = -1;
 handles.DT = setVVoronoi(handles);
 guidata(hObject,handles)
+
+function deleteElement(hObject,eventdata)
+handles = guidata(hObject);
+switch eventdata.Key
+    case 'backspace' % if backspace is pressed
+        newhandles = deleteVE(handles);
+        guidata(hObject,newhandles)
+    otherwise % do nothing
+end
+
+function handles = deleteVE(handles)
+global ALL;
+if handles.onV
+    index = handles.vIndex;
+    set(handles.vH{index},'Visible','off')
+    handles.masterData(1).VALL{index} = [];
+    adj = handles.masterData(1).ADJLIST{index}; % Look for more deletions
+    vert = adj(1,:);
+    edge = adj(2,:);
+    handles.masterData(1).ADJLIST{index} = []; % Get rid of deleted vertex ADJLIST
+    for n = 1:numel(edge)
+        handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
+        set(handles.eH{edge(n)},'Visible','off') % Edges visible off
+        adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
+        adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
+        handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
+    end
+    handles.masterData(1).ADJLIST{index} = [];
+end
+if handles.onE
+    index = handles.eIndex;
+    ctrlMatrix = handles.masterData(1).EALL{index}.control;
+    vIndex1 = nearestNeighbor(handles.vDT,ctrlMatrix(:,1)');
+    vIndex2 = nearestNeighbor(handles.vDT,ctrlMatrix(:,end)');
+    adjMatrix1 = handles.masterData(1).ADJLIST{vIndex1};
+    adjMatrix1(:,find(adjMatrix1(1,:) == vIndex2)) = []; 
+    adjMatrix2 = handles.masterData(1).ADJLIST{vIndex2};
+    adjMatrix2(:,find(adjMatrix2(1,:) == vIndex1)) = []; % Get rid of adjacencies
+    handles.masterData(1).ADJLIST{vIndex1} = adjMatrix1;
+    handles.masterData(1).ADJLIST{vIndex2} = adjMatrix2; % Reset
+    set(handles.eH{index},'Visible','off')
+    set(handles.cpH{index},'Visible','off')
+    handles.masterData(1).EALL{index} = [];
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles)
@@ -188,7 +239,6 @@ function varargout = Displayer_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in showGraph.
 function showGraph_Callback(hObject, eventdata, handles)
 % hObject    handle to showGraph (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -218,7 +268,7 @@ function frame_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of frame as a double
 showGT_Callback(hObject,eventdata,handles)
 
-% --- Executes during object creation, after setting all properties.
+
 function frame_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -230,7 +280,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on button press in add_element.
+
 function add_element_Callback(hObject, eventdata, handles)
 % hObject    handle to add_element (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -239,7 +289,7 @@ handles = guidata(hObject);
 handles.isAdd = ~handles.isAdd;
 guidata(hObject,handles)
 
-% --- Executes on button press in showRaw.
+
 function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -248,28 +298,22 @@ global ALL;
 frame = str2double(get(handles.frame,'String'));
 imagesc(ALL(:,:,frame));
 
-% --------------------------------------------------------------------
+
 function Untitled_1_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --------------------------------------------------------------------
 function Untitled_4_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_4 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --------------------------------------------------------------------
 function Untitled_5_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes on button press in open_track.
 function open_track_Callback(hObject, eventdata, handles)
 % hObject    handle to open_track (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
