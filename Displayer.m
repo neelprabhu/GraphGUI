@@ -66,7 +66,7 @@ set(gca,'Visible','off') %Turns off axes
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
-set(gcf, 'KeyPressFcn', @deleteElement);
+set(gcf, 'KeyPressFcn', @buttonPress);
 
 %% Sets up initial Voronoi diagram of vertices and edge midpoints
 
@@ -93,6 +93,7 @@ if handles.isAdd
     next = size(masterData(1).VALL,1);
     masterData(1).VALL{next+1} = handles.cp;
     masterData(1).ADJLIST{next+1} = [];
+    handles.vIndex = next+1;
     hold on;
     [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(ALL(:,:,1), masterData(1).VALL,  ...
         masterData(1).EALL, 'on');
@@ -181,15 +182,18 @@ end
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
 handles.vertexIdx = -1;
-handles.DT = setVVoronoi(handles);
+handles.vDT = setVVoronoi(handles);
 guidata(hObject,handles)
 
-function deleteElement(hObject,eventdata)
+function buttonPress(hObject,eventdata)
 handles = guidata(hObject);
 switch eventdata.Key
     case 'backspace' % if backspace is pressed
         newhandles = deleteVE(handles);
         guidata(hObject,newhandles)
+    case 'n'
+        handles.isAdd = 1;
+        guidata(hObject,handles)
     otherwise % do nothing
 end
 
@@ -199,18 +203,22 @@ if handles.onV
     index = handles.vIndex;
     set(handles.vH{index},'Visible','off')
     handles.masterData(1).VALL{index} = [];
-    adj = handles.masterData(1).ADJLIST{index}; % Look for more deletions
-    vert = adj(1,:);
-    edge = adj(2,:);
-    handles.masterData(1).ADJLIST{index} = []; % Get rid of deleted vertex ADJLIST
-    for n = 1:numel(edge)
-        handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
-        set(handles.eH{edge(n)},'Visible','off') % Edges visible off
-        adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
-        adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
-        handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
+    adj = handles.masterData(1).ADJLIST{index}; % More deletions
+    if isempty(adj)
+        return;
+    else
+        vert = adj(1,:);
+        edge = adj(2,:);
+        handles.masterData(1).ADJLIST{index} = []; % Get rid of deleted vertex ADJLIST
+        for n = 1:numel(edge)
+            handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
+            set(handles.eH{edge(n)},'Visible','off') % Edges visible off
+            adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
+            adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
+            handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
+        end
+        handles.masterData(1).ADJLIST{index} = [];
     end
-    handles.masterData(1).ADJLIST{index} = [];
 end
 if handles.onE
     index = handles.eIndex;
@@ -298,7 +306,6 @@ global ALL;
 frame = str2double(get(handles.frame,'String'));
 imagesc(ALL(:,:,frame));
 
-
 function Untitled_1_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -313,6 +320,7 @@ function Untitled_5_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 
 function open_track_Callback(hObject, eventdata, handles)
 % hObject    handle to open_track (see GCBO)
