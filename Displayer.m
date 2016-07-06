@@ -72,6 +72,7 @@ set(handles.frame,'String','1');
 % Parameters into handles
 handles.vertexIdx = -1; % No vertex selected default
 handles.isAdd = 0; % Not adding element default
+handles.addEdge = 0;
 handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
 handles.zStY = 20; handles.zStoY = size(handles.ALL(:,:,1),1)-19;
 handles.prevVIdx = 1; handles.onV = false;
@@ -107,6 +108,7 @@ else
     return;
 end
 
+% Adding vertex
 if handles.isAdd
     next = size(masterData(1).VALL,1);
     masterData(1).VALL{next+1} = handles.cp;
@@ -125,8 +127,61 @@ else
     guidata(hObject,handles)
 end
 
-% Finds nearest vertex
 [handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
+
+% Adding edge
+if handles.addEdge==1    
+    handles.addE(1) = handles.vertexIdx;
+    handles.addEdge = 2;
+    display(handles.addE(1));
+    guidata(hObject,handles)
+    return;
+end
+
+if handles.addEdge == 2
+    handles.addE(2) = handles.vertexIdx;
+    handles.addEdge = 0;
+    display(handles.addE(2));
+    
+    masterData = handles.masterData;
+    
+    k = 2; % Number of interior control points
+    nctr = k + 2; % Number of control points
+    mult = ones(1, nctr - 3);
+    
+    control = [masterData(1).VALL{handles.addE(1)}, ...
+        masterData(1).VALL{handles.addE(1),1}+(masterData(1).VALL{handles.addE(2),1}-handles.masterData(1).VALL{handles.addE(1),1}).*(1/3), ...
+        masterData(1).VALL{handles.addE(1),1}+(handles.masterData(1).VALL{handles.addE(2),1}-masterData(1).VALL{handles.addE(1),1}).*(2/3), ...
+        masterData(1).VALL{handles.addE(2),1}];
+    order = 3;
+    open = true;
+    n = 101;
+    makeNeedles = false;
+    
+    s = splineMake(control, order, mult, open, n, makeNeedles);
+    
+    next = size(masterData(1).EALL,1);
+    masterData(1).EALL{next+1} = s;
+    
+    tmp = [handles.addE(2);next+1];
+    masterData(1).ADJLIST{handles.addE(1),1} = [masterData(1).ADJLIST{handles.addE(1),1},...
+        tmp];
+    tmp = [handles.addE(1);next+1];
+    masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
+        tmp];
+
+    [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(handles.ALL(:,:,1), masterData(1).VALL,  ...
+        masterData(1).EALL, 'on');
+    set(gca, 'XLim', [handles.zStX handles.zStoX]);
+    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+    handles.addEdge = 0; 
+    handles.masterData = masterData;
+    handles.eDT = setEVoronoi(handles);
+    guidata(hObject,handles)
+    return;
+end
+
+% Finds nearest edge and compare, change colors
 [handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
 handles.vIndex = handles.vertexIdx;
 handles.eIndex = handles.edgeIdx;
@@ -203,7 +258,6 @@ function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
 handles.vertexIdx = -1;
 handles.vDT = setVVoronoi(handles);
-handles.eDT = setEVoronoi(handles);
 guidata(hObject,handles)
 
 function buttonPress(hObject,eventdata)
@@ -238,8 +292,8 @@ if handles.onV
             handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
         end
     end
-    handles.vDT = setVVoronoi(handles);
-    handles.eDT = setEVoronoi(handles); % No guidata needed, returns handles
+%     handles.vDT = setVVoronoi(handles);
+%     handles.eDT = setEVoronoi(handles); % No guidata needed, returns handles
 end
 if handles.onE
     index = handles.eIndex;
@@ -255,7 +309,7 @@ if handles.onE
     set(handles.eH{index},'Visible','off')
     set(handles.cpH{index},'Visible','off')
     handles.masterData(1).EALL{index} = [];
-    handles.eDT = setEVoronoi(handles); % No guidata needed, returns handles
+%     handles.eDT = setEVoronoi(handles); % No guidata needed, returns handles
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -348,4 +402,14 @@ answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
 sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
 [handles.masterData] = customMembraneTrack(handles.ALL, handles.GT, ...
     handles.options, handles.masterData,sFrame,eFrame);
+guidata(hObject,handles)
+
+
+% --- Executes on button press in add_edge.
+function add_edge_Callback(hObject, eventdata, handles)
+% hObject    handle to add_edge (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+handles.addEdge = 1;
 guidata(hObject,handles)
