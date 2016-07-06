@@ -1,4 +1,4 @@
-function [ V, E, adjList, faceList, Gamma ] = embryoInitGraph( GT, spacing, optInitSpline, parallel )
+function [ V, E, adjList, faceList, Gamma ] = embryoInitGraph( GT, spacing, parallel )
 %EMBRYOINITGRAPH Compute initial splines and vertices from ground truth.
 %
 % INPUTS
@@ -38,7 +38,7 @@ if parallel
         % dynamically compute number of control points
         k = nCtrlPts(gamma, spacing);
         % create optimal spline from sampling
-        s = optInitSpline(gamma, 3, k);
+        s = optInitSpline_A(gamma, 3, k);
         E{uInd} = s;
     end
 else
@@ -50,7 +50,7 @@ else
         % dynamically compute number of control points
         k = nCtrlPts(gamma, spacing);
         % create optimal spline from sampling
-        s = optInitSpline(gamma, 3, k);
+        s = optInitSpline_A(gamma, 3, k);
         E{uInd} = s;
     end
 end

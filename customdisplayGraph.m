@@ -17,7 +17,7 @@ function [vH,eH,cpH] = customdisplayGraph(I, V, E, visible)
 if nargin < 4 || isempty(visible)
     visible = 'on';
 end
-
+ 
 % get lengths
 N = length(V);
 M = length(E);
