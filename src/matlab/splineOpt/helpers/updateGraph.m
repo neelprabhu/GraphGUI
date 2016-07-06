@@ -58,13 +58,14 @@ while true
 
     % get sizes
     N = numel(V);
-
+    
     % sort the vertices by distance
     Varray = NaN(N, d);
     for ii=1:N
         Varray(ii,:) = V{ii}';
     end
-    D = triu( squareform(pdist(Varray)), 1);
+    
+    D = triu(squareform(pdist(Varray)), 1);
     D(tril(true(N))) = Inf;
     [Vals, Ind] = sort(D(:));
     Vals(Vals>interval) = [];

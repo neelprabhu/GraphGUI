@@ -229,5 +229,4 @@ global B; global TIFF;
 imwrite(B,'myGT.png');
 assignin('base','TIFF',TIFF);
 closereq;
-%Displayer;
-RUNME;
+Displayer;
