@@ -16,5 +16,5 @@ for m = 1:numel(EALL)
         eMatrix(m,:) = point;
     end
 end
-    
+eMatrix = unique(eMatrix,'rows','stable');    
 dt = delaunayTriangulation(eMatrix);
