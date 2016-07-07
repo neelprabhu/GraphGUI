@@ -129,7 +129,10 @@ else
     guidata(hObject,handles)
 end
 
+% Find nearest vertex and edge
 [handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
+[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
+handles.edgeIdx
 
 % Adding edge
 if handles.addEdge==1    
@@ -181,7 +184,6 @@ if handles.addEdge == 2
     handles.masterData = masterData;
     handles.eDT = setEVoronoi(handles);
     guidata(hObject,handles)
-    return;
 end
 
 % Finds nearest edge and compare, change colors
@@ -203,10 +205,8 @@ if handles.vD < handles.eD
     set(eprevProps,'Color','y')
     set(cprevProps,'Visible','off')
     set(vProps,'MarkerEdgeColor','g','MarkerFaceColor','g')
-    handles.prevVIdx = handles.vertexIdx; %Sets previous vertex equal to current
-    handles.onE = false;
-    handles.onV = true;
-    guidata(hObject,handles)
+    handles.prevVIdx = handles.vertexIdx; % Sets previous vertex equal to current
+    handles.onE = false; handles.onV = true;
 else
     hold on;
     set(eprevProps,'Color','y')
@@ -215,10 +215,9 @@ else
     set(eProps,'Color','g')
     set(cProps,'Visible','on')
     handles.prevEIdx = handles.edgeIdx;
-    handles.onE = true;
-    handles.onV = false;
-    guidata(hObject,handles)
+    handles.onE = true; handles.onV = false;
 end
+guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
 handles = guidata(hObject);
