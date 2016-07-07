@@ -37,87 +37,192 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before Displayer is made visible.
+
 function Displayer_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to Displayer (see VARARGIN)
 
 % Choose default command line output for Displayer
 handles.output = hObject;
 
-% Update handles structure
-global getOUT;
+% Lots of parameters, some unnecessary...
+
+l = 17;                 % width of edge window
+w = 25;                 % width of vertex window
+alpha = 0.5;            % scaling edge cost contributions
+interval = 1;           % merge vertices if distance is less or equal
+spacing = 15;           % spacing of control points on splines
+parallel = false;       % parallelization with parfor
+verboseE = 0;           % verbose flag for edge optimization
+verboseG = 0;           % verbose flag for vertex optimization
+siftflow = true;        % SIFT flow flag
+fname = ['tmp_grid2_', datestr(clock, 'mmddyy_HH:MM:SS')];
+handles.options = struct('l',l,'w',w,'alpha',alpha,'interval',interval, ...
+    'spacing',spacing,'parallel',parallel,'verboseE',verboseE, ...
+    'verboseG',verboseG,'siftflow',siftflow,'fname',fname);
+
 global ALL;
-handles.masterData = transfer(getOUT);
+GT = imread('myGT.png');
+handles.GT = padarray(GT, [20,20]);
+handles.ALL = padarray(ALL, [20,20,0]);
+[V,E,A,F] = embryoInitGraph(handles.GT,20,false);
+handles.masterData = struct('VALL',{V},'EALL',{E},'ADJLIST',{A},'FACELIST',{F});
 set(handles.frame,'String','1');
 
 %% Code for tracking mouse movements and clicks
 
-handles.vertexIdx = -1;
-handles.isAdd = 0;
-handles.zStX = 20; handles.zStoX = size(ALL(:,:,1),2)-19;
-handles.zStY = 20; handles.zStoY = size(ALL(:,:,1),1)-19;
+% Parameters into handles
+handles.vertexIdx = -1; % No vertex selected default
+handles.isAdd = 0; % Not adding element default
+handles.addEdge = 0;
+handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
+handles.zStY = 20; handles.zStoY = size(handles.ALL(:,:,1),1)-19;
+handles.prevVIdx = 1; handles.onV = false;
+handles.prevEIdx = 1; handles.onE = false;
 guidata(hObject,handles)
 
-showGT_Callback(handles.showGT,eventdata,handles); %Initializes window
+showGraph_Callback(handles.showGraph,eventdata,handles); % Initializes window
 set(gca,'Visible','off') %Turns off axes
 
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
+set(gcf, 'KeyPressFcn', @buttonPress);
 
-%% Sets up initial Voronoi diagram of vertices
+%% Sets up initial Voronoi diagram of vertices and edge midpoints
 
 handles = guidata(hObject);
-handles.DT = setVoronoi(handles);
+handles.vDT = setVVoronoi(handles);
+handles.eDT = setEVoronoi(handles);
 guidata(hObject,handles)
 
-function selectPoint(hObject, eventdata) % When mouse is clicked
-global ALL;
-
+function selectPoint(hObject,eventdata) % When mouse is clicked
+    
 handles = guidata(hObject);
 masterData = handles.masterData;
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2);
 
-if prelimPoint(1) > 20 && prelimPoint(2) > 20
+if inpolygon(prelimPoint(1),prelimPoint(2), ...
+        [handles.zStX handles.zStoX],[handles.zStY handles.zStoY])
     handles.cp = prelimPoint;
 else
-    handles.cp = [];
+    return;
 end
 
+% Adding vertex
 if handles.isAdd
     next = size(masterData(1).VALL,1);
     masterData(1).VALL{next+1} = handles.cp;
+    masterData(1).ADJLIST{next+1} = [];
+    handles.vIndex = next+1;
     hold on;
-    displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-        masterData(1).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX])
-    set(gca, 'YLim', [handles.zStY handles.zStoY])
+    frame = str2double(get(handles.frame,'String'));
+    [handles.vH, handles.eH, handles.cpH] = ...
+        customdisplayGraph(handles.ALL(:,:farme), ...
+        masterData(handles.frame).VALL, masterData(handles.frame).EALL, 'on');
+    set(gca, 'XLim', [handles.zStX handles.zStoX]);
+    set(gca, 'YLim', [handles.zStY handles.zStoY]);
     handles.isAdd = 0; handles.masterData = masterData;
-    handles.DT = setVoronoi(handles);
+    handles.vDT = setVVoronoi(handles);
+    guidata(hObject,handles)
+    return;
+else
+    guidata(hObject,handles)
+end
+
+[handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
+
+% Adding edge
+if handles.addEdge==1    
+    handles.addE(1) = handles.vertexIdx;
+    handles.addEdge = 2;
+    display(handles.addE(1));
     guidata(hObject,handles)
     return;
 end
 
-% Finds nearest vertex
-handles.vertexIdx = nearestNeighbor(handles.DT,handles.cp);
+if handles.addEdge == 2
+    handles.addE(2) = handles.vertexIdx;
+    handles.addEdge = 0;
+    display(handles.addE(2));
+    
+    masterData = handles.masterData;
+    
+    k = 2; % Number of interior control points
+    nctr = k + 2; % Number of control points
+    mult = ones(1, nctr - 3);
+    
+    control = [masterData(1).VALL{handles.addE(1)}, ...
+        masterData(1).VALL{handles.addE(1),1}+(masterData(1).VALL{handles.addE(2),1}-handles.masterData(1).VALL{handles.addE(1),1}).*(1/3), ...
+        masterData(1).VALL{handles.addE(1),1}+(handles.masterData(1).VALL{handles.addE(2),1}-masterData(1).VALL{handles.addE(1),1}).*(2/3), ...
+        masterData(1).VALL{handles.addE(2),1}];
+    order = 3;
+    open = true;
+    n = 101;
+    makeNeedles = false;
+    
+    s = splineMake(control, order, mult, open, n, makeNeedles);
+    
+    next = size(masterData(1).EALL,1);
+    masterData(1).EALL{next+1} = s;
+    
+    tmp = [handles.addE(2);next+1];
+    masterData(1).ADJLIST{handles.addE(1),1} = [masterData(1).ADJLIST{handles.addE(1),1},...
+        tmp];
+    tmp = [handles.addE(1);next+1];
+    masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
+        tmp];
 
-%set(gca,'UserData',state)
-display(handles.vertexIdx)
+    [handles.vH, handles.eH, handles.cpH] = ...
+        customdisplayGraph(handles.ALL(:,:,handles.frame), ...
+        masterData(handles.frame).VALL, masterData(handles.frame).EALL, 'on');
+    set(gca, 'XLim', [handles.zStX handles.zStoX]);
+    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+    handles.addEdge = 0; 
+    handles.masterData = masterData;
+    handles.eDT = setEVoronoi(handles);
+    guidata(hObject,handles)
+    return;
+end
 
-hold on;
-displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-    masterData(1).EALL, 'on', handles.vertexIdx);
+% Finds nearest edge and compare, change colors
+[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
+handles.vIndex = handles.vertexIdx;
+handles.eIndex = handles.edgeIdx;
 guidata(hObject,handles)
 
+vProps = handles.vH{handles.vertexIdx};
+vprevProps = handles.vH{handles.prevVIdx};
+eProps = handles.eH{handles.edgeIdx};
+eprevProps = handles.eH{handles.prevEIdx};
+cProps = handles.cpH{handles.edgeIdx};
+cprevProps = handles.cpH{handles.prevEIdx};
+
+if handles.vD < handles.eD
+    hold on;
+    set(vprevProps,'MarkerEdgeColor','r','MarkerFaceColor','r')
+    set(eprevProps,'Color','y')
+    set(cprevProps,'Visible','off')
+    set(vProps,'MarkerEdgeColor','g','MarkerFaceColor','g')
+    handles.prevVIdx = handles.vertexIdx; %Sets previous vertex equal to current
+    handles.onE = false;
+    handles.onV = true;
+    guidata(hObject,handles)
+else
+    hold on;
+    set(eprevProps,'Color','y')
+    set(cprevProps,'Visible','off')
+    set(vprevProps,'MarkerEdgeColor','r','MarkerFaceColor','r')
+    set(eProps,'Color','g')
+    set(cProps,'Visible','on')
+    handles.prevEIdx = handles.edgeIdx;
+    handles.onE = true;
+    handles.onV = false;
+    guidata(hObject,handles)
+end
+
 function trackPoint(hObject,eventdata)
-global ALL;
 handles = guidata(hObject);
-if handles.vertexIdx ~= -1
+if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     %move point here
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
@@ -139,25 +244,73 @@ if handles.vertexIdx ~= -1
             if subb < minn
                 minn = subb;
                 splineIdx = j;
-            end
+            end          
         end
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
-        
-        displayGraph(ALL(:,:,1), masterData(1).VALL,  ...
-            masterData(1).EALL, 'on');
-        set(gca, 'XLim', [handles.zStX handles.zStoX])
-        set(gca, 'YLim', [handles.zStY handles.zStoY])
-        handles.masterData = masterData;
     end
+    set(gca, 'XLim', [handles.zStX handles.zStoX])
+    set(gca, 'YLim', [handles.zStY handles.zStoY])
+    handles.masterData = masterData;
+    guidata(hObject,handles);
+    vH = handles.vH; vProp = vH{handles.vertexIdx};
+    set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
- handles.DT = setVoronoi(handles);
-guidata(hObject,handles)
 
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
 handles.vertexIdx = -1;
+handles.vDT = setVVoronoi(handles);
 guidata(hObject,handles)
+
+function buttonPress(hObject,eventdata)
+handles = guidata(hObject);
+switch eventdata.Key
+    case 'backspace' % if backspace is pressed
+        newhandles = deleteVE(handles);
+        guidata(hObject,newhandles)
+    case 'n'
+        handles.isAdd = 1;
+        guidata(hObject,handles)
+    otherwise % do nothing
+end
+
+function handles = deleteVE(handles)
+if handles.onV
+    index = handles.vIndex;
+    set(handles.vH{index},'Visible','off')
+    handles.masterData(1).VALL{index} = [NaN;NaN];
+    adj = handles.masterData(1).ADJLIST{index}; % More deletions
+    if isempty(adj)
+        return;
+    else
+        vert = adj(1,:);
+        edge = adj(2,:);
+        handles.masterData(1).ADJLIST{index} = [NaN;NaN]; % Get rid of deleted vertex ADJLIST
+        for n = 1:numel(edge)
+            handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
+            set(handles.eH{edge(n)},'Visible','off') % Edges visible off
+            adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
+            adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
+            handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
+        end
+    end
+end
+if handles.onE
+    index = handles.eIndex;
+    ctrlMatrix = handles.masterData(1).EALL{index}.control;
+    vIndex1 = nearestNeighbor(handles.vDT,ctrlMatrix(:,1)');
+    vIndex2 = nearestNeighbor(handles.vDT,ctrlMatrix(:,end)');
+    adjMatrix1 = handles.masterData(1).ADJLIST{vIndex1};
+    adjMatrix1(:,find(adjMatrix1(1,:) == vIndex2)) = []; 
+    adjMatrix2 = handles.masterData(1).ADJLIST{vIndex2};
+    adjMatrix2(:,find(adjMatrix2(1,:) == vIndex1)) = []; % Get rid of adjacencies
+    handles.masterData(1).ADJLIST{vIndex1} = adjMatrix1;
+    handles.masterData(1).ADJLIST{vIndex2} = adjMatrix2; % Reset
+    set(handles.eH{index},'Visible','off')
+    set(handles.cpH{index},'Visible','off')
+    handles.masterData(1).EALL{index} = [];
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles)
@@ -170,17 +323,18 @@ function varargout = Displayer_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in showGT.
-function showGT_Callback(hObject, eventdata, handles)
-% hObject    handle to showGT (see GCBO)
+function showGraph_Callback(hObject, eventdata, handles)
+% hObject    handle to showGraph (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global ALL;
-frame = str2double(get(handles.frame,'String'));
 handles = guidata(hObject);
-H = displayGraph(ALL(:,:,frame), handles.masterData(frame).VALL, handles.masterData(frame).EALL, 'on');
+mD = handles.masterData;
+[handles.vH,handles.eH,handles.cpH] = ...
+    customdisplayGraph(handles.ALL(:,:,handles.frame), ...
+    mD(handles.frame).VALL, mD(handles.frame).EALL, 'on');
 set(gca, 'XLim', [handles.zStX handles.zStoX])
 set(gca, 'YLim', [handles.zStY handles.zStoY])
+guidata(hObject,handles)
 
 function frame_Callback(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
@@ -189,9 +343,12 @@ function frame_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of frame as text
 %        str2double(get(hObject,'String')) returns contents of frame as a double
-showGT_Callback(hObject,eventdata,handles)
+handles = guidata(hObject);
+handles.frame = str2double(get(hObject,'String'));
+guidata(hObject,handles)
+showRaw_Callback(hObject,eventdata,handles)
 
-% --- Executes during object creation, after setting all properties.
+
 function frame_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -203,52 +360,58 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on button press in add_element.
+
 function add_element_Callback(hObject, eventdata, handles)
 % hObject    handle to add_element (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
-handles.isAdd = 1;
+handles.isAdd = ~handles.isAdd;
 guidata(hObject,handles)
 
-% --- Executes on button press in showRaw.
+
 function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global ALL;
+handles = guidata(hObject);
 frame = str2double(get(handles.frame,'String'));
-imagesc(ALL(:,:,frame));
+imagesc(handles.ALL(:,:,frame));
 
-% --------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --------------------------------------------------------------------
 function Untitled_4_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_4 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --------------------------------------------------------------------
 function Untitled_5_Callback(hObject, eventdata, handles)
 % hObject    handle to Untitled_5 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes on button press in pushbutton7.
-function pushbutton7_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton7 (see GCBO)
+function open_track_Callback(hObject, eventdata, handles)
+% hObject    handle to open_track (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 prompt = {'Starting frame:','Ending frame:'};
 dlg_title = 'Tracking Options'; num_lines = 1; defaultans = {'1','2'};
 handles = guidata(hObject);
-handles.answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
+[handles.masterData] = customMembraneTrack(handles.ALL, handles.GT, ...
+    handles.options, handles.masterData,sFrame,eFrame);
+guidata(hObject,handles)
+
+
+% --- Executes on button press in add_edge.
+function add_edge_Callback(hObject, eventdata, handles)
+% hObject    handle to add_edge (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+handles.addEdge = 1;
 guidata(hObject,handles)
