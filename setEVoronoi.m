@@ -20,5 +20,3 @@ for m = 1:numel(EALL)
 end
 %eMatrix = unique(eMatrix,'rows','stable');    
 dt = delaunayTriangulation(eMatrix);
-axes(gca)
-triplot(dt,'m','LineWidth',1)
