@@ -117,8 +117,8 @@ if handles.isAdd
     hold on;
     frame = str2double(get(handles.frame,'String'));
     [handles.vH, handles.eH, handles.cpH] = ...
-        customdisplayGraph(handles.ALL(:,:farme), ...
-        masterData(handles.frame).VALL, masterData(handles.frame).EALL, 'on');
+        customdisplayGraph(handles.ALL(:,:,frame), ...
+        masterData(frame).VALL, masterData(frame).EALL, 'on');
     set(gca, 'XLim', [handles.zStX handles.zStoX]);
     set(gca, 'YLim', [handles.zStY handles.zStoY]);
     handles.isAdd = 0; handles.masterData = masterData;
@@ -130,6 +130,7 @@ else
 end
 
 [handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
+[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
 
 % Adding edge
 if handles.addEdge==1    
@@ -171,21 +172,19 @@ if handles.addEdge == 2
     tmp = [handles.addE(1);next+1];
     masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
         tmp];
-
+    frame = str2double(get(handles.frame,'String'));
     [handles.vH, handles.eH, handles.cpH] = ...
-        customdisplayGraph(handles.ALL(:,:,handles.frame), ...
-        masterData(handles.frame).VALL, masterData(handles.frame).EALL, 'on');
+        customdisplayGraph(handles.ALL(:,:,frame), ...
+        masterData(frame).VALL, masterData(frame).EALL, 'on');
     set(gca, 'XLim', [handles.zStX handles.zStoX]);
     set(gca, 'YLim', [handles.zStY handles.zStoY]);
-    handles.addEdge = 0; 
+    handles.addEdge = 0;
     handles.masterData = masterData;
     handles.eDT = setEVoronoi(handles);
     guidata(hObject,handles)
-    return;
 end
 
 % Finds nearest edge and compare, change colors
-[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
 handles.vIndex = handles.vertexIdx;
 handles.eIndex = handles.edgeIdx;
 guidata(hObject,handles)
@@ -329,9 +328,10 @@ function showGraph_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 mD = handles.masterData;
-[handles.vH,handles.eH,handles.cpH] = ...
-    customdisplayGraph(handles.ALL(:,:,handles.frame), ...
-    mD(handles.frame).VALL, mD(handles.frame).EALL, 'on');
+frame = str2double(get(handles.frame,'String'));
+[handles.vH, handles.eH, handles.cpH] = ...
+    customdisplayGraph(handles.ALL(:,:,frame), ...
+    mD(frame).VALL, mD(frame).EALL, 'on');
 set(gca, 'XLim', [handles.zStX handles.zStoX])
 set(gca, 'YLim', [handles.zStY handles.zStoY])
 guidata(hObject,handles)
@@ -343,9 +343,6 @@ function frame_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of frame as text
 %        str2double(get(hObject,'String')) returns contents of frame as a double
-handles = guidata(hObject);
-handles.frame = str2double(get(hObject,'String'));
-guidata(hObject,handles)
 showRaw_Callback(hObject,eventdata,handles)
 
 
@@ -374,7 +371,6 @@ function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = guidata(hObject);
 frame = str2double(get(handles.frame,'String'));
 imagesc(handles.ALL(:,:,frame));
 

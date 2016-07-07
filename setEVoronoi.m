@@ -6,15 +6,19 @@ masterData = handles.masterData;
 EALL = masterData(1).EALL;
 eMatrix = zeros(numel(EALL),2);
 
+counter = 0;
 for m = 1:numel(EALL)
-    if isempty(EALL{m})
-        continue;
-    else
+    if ~isempty(EALL{m})
         ctrl = EALL{m}.control;
         num = round(size(ctrl,2)/2);
         point = ctrl(:,num)';
         eMatrix(m,:) = point;
+    else
+        eMatrix(m,:) = [counter counter];
+        counter = counter - 1;
     end
 end
-eMatrix = unique(eMatrix,'rows','stable');    
+%eMatrix = unique(eMatrix,'rows','stable');    
 dt = delaunayTriangulation(eMatrix);
+axes(gca)
+triplot(dt,'m','LineWidth',1)
