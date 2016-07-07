@@ -115,8 +115,10 @@ if handles.isAdd
     masterData(1).ADJLIST{next+1} = [];
     handles.vIndex = next+1;
     hold on;
-    [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(handles.ALL(:,:,1), masterData(1).VALL,  ...
-        masterData(1).EALL, 'on');
+    frame = str2double(get(handles.frame,'String'));
+    [handles.vH, handles.eH, handles.cpH] = ...
+        customdisplayGraph(handles.ALL(:,:,frame), ...
+        masterData(frame).VALL, masterData(frame).EALL, 'on');
     set(gca, 'XLim', [handles.zStX handles.zStoX]);
     set(gca, 'YLim', [handles.zStY handles.zStoY]);
     handles.isAdd = 0; handles.masterData = masterData;
@@ -169,12 +171,13 @@ if handles.addEdge == 2
     tmp = [handles.addE(1);next+1];
     masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
         tmp];
-
-    [handles.vH, handles.eH, handles.cpH] = customdisplayGraph(handles.ALL(:,:,1), masterData(1).VALL,  ...
-        masterData(1).EALL, 'on');
+    frame = str2double(get(handles.frame,'String'));
+    [handles.vH, handles.eH, handles.cpH] = ...
+        customdisplayGraph(handles.ALL(:,:,frame), ...
+        masterData(frame).VALL, masterData(frame).EALL, 'on');
     set(gca, 'XLim', [handles.zStX handles.zStoX]);
     set(gca, 'YLim', [handles.zStY handles.zStoY]);
-    handles.addEdge = 0; 
+    handles.addEdge = 0;
     handles.masterData = masterData;
     handles.eDT = setEVoronoi(handles);
     guidata(hObject,handles)
@@ -292,8 +295,6 @@ if handles.onV
             handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
         end
     end
-%     handles.vDT = setVVoronoi(handles);
-%     handles.eDT = setEVoronoi(handles); % No guidata needed, returns handles
 end
 if handles.onE
     index = handles.eIndex;
@@ -309,7 +310,6 @@ if handles.onE
     set(handles.eH{index},'Visible','off')
     set(handles.cpH{index},'Visible','off')
     handles.masterData(1).EALL{index} = [];
-%     handles.eDT = setEVoronoi(handles); % No guidata needed, returns handles
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -328,10 +328,10 @@ function showGraph_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
-
-frame = str2double(get(handles.frame,'String'));
 mD = handles.masterData;
-[handles.vH,handles.eH,handles.cpH] = customdisplayGraph(handles.ALL(:,:,frame), ...
+frame = str2double(get(handles.frame,'String'));
+[handles.vH, handles.eH, handles.cpH] = ...
+    customdisplayGraph(handles.ALL(:,:,frame), ...
     mD(frame).VALL, mD(frame).EALL, 'on');
 set(gca, 'XLim', [handles.zStX handles.zStoX])
 set(gca, 'YLim', [handles.zStY handles.zStoY])
@@ -372,7 +372,6 @@ function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = guidata(hObject);
 frame = str2double(get(handles.frame,'String'));
 imagesc(handles.ALL(:,:,frame));
 
