@@ -19,5 +19,3 @@ for n = 1:numel(VALL)
 end
 %vMatrix = unique(vMatrix,'rows','stable');
 dt = delaunayTriangulation(vMatrix);
-axes(gca)
-triplot(dt,'g','LineWidth',1)

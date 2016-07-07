@@ -108,6 +108,10 @@ else
     return;
 end
 
+% Find nearest vertex and edge
+[handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
+[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
+
 % Adding vertex
 if handles.isAdd
     next = size(masterData(1).VALL,1);
@@ -125,22 +129,13 @@ if handles.isAdd
     handles.vDT = setVVoronoi(handles);
     guidata(hObject,handles)
     return;
-else
-    guidata(hObject,handles)
 end
 
-% Find nearest vertex and edge
-[handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
-[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
-handles.edgeIdx
-
-% Adding edge
-if handles.addEdge==1    
+if handles.addEdge == 1    
     handles.addE(1) = handles.vertexIdx;
     handles.addEdge = 2;
     display(handles.addE(1));
     guidata(hObject,handles)
-    return;
 end
 
 if handles.addEdge == 2
@@ -410,4 +405,18 @@ function add_edge_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 handles.addEdge = 1;
+guidata(hObject,handles)
+
+
+% --- Executes on button press in load.
+function load_Callback(hObject, eventdata, handles)
+% hObject    handle to load (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+[file1, path1] = uigetfile({'*.mat';'*.*'}, 'Choose a pre-processed .mat file.');
+handles.masterData = load([path1,file1]);
+[file2, path2] = uigetfile({'*.tif';'*.*'}, 'Choose a pre-processed .tif stack.');
+stack = loadtiff([path2,file2]);
+handles.ALL = padarray(stack, [20,20,0]);
 guidata(hObject,handles)
