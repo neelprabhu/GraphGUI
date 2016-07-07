@@ -143,8 +143,12 @@ if handles.vertexIdx ~= -1
                 splineIdx = j;
             end          
         end
+        
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
+        spline1.handles = splineDraw(spline1);
+        spline1.d = splineEvalEven(spline1.d, true, true, spline1.image);
+        redraw(spline1);
     end
       set(gca, 'XLim', [handles.zStX handles.zStoX])
       set(gca, 'YLim', [handles.zStY handles.zStoY])
@@ -161,6 +165,13 @@ handles = guidata(hObject);
 handles.vertexIdx = -1;
 guidata(hObject,handles)
 
+
+    function s = redraw(s)
+        splineDraw(s, s.handles);
+%         if s.image
+ %            title(matchQuality(s.d, s.gradImg))
+%         end
+    
 % --- Outputs from this function are returned to the command line.
 function varargout = Displayer_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
