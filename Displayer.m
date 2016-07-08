@@ -44,7 +44,7 @@ function Displayer_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Lots of parameters, some unnecessary...
-
+setup;
 l = 17;                 % width of edge window
 w = 25;                 % width of vertex window
 alpha = 0.5;            % scaling edge cost contributions
@@ -54,12 +54,13 @@ parallel = false;       % parallelization with parfor
 verboseE = 0;           % verbose flag for edge optimization
 verboseG = 0;           % verbose flag for vertex optimization
 siftflow = true;        % SIFT flow flag
-fname = ['tmp_grid2_', datestr(clock, 'mmddyy_HH:MM:SS')];
+fname = ['tmp_grid2_', datestr(clock,'mmddyy_HH:MM:SS')];
 handles.options = struct('l',l,'w',w,'alpha',alpha,'interval',interval, ...
     'spacing',spacing,'parallel',parallel,'verboseE',verboseE, ...
     'verboseG',verboseG,'siftflow',siftflow,'fname',fname);
 
 global ALL;
+    
 GT = imread('myGT.png');
 handles.GT = padarray(GT, [20,20]);
 handles.ALL = padarray(ALL, [20,20,0]);
@@ -119,12 +120,14 @@ if handles.isAdd
     masterData(1).ADJLIST{next+1} = [];
     handles.vIndex = next+1;
     hold on;
+    xlim = get(gca,'XLim');
+    ylim = get(gca,'YLim');
     frame = str2double(get(handles.frame,'String'));
     [handles.vH, handles.eH, handles.cpH] = ...
         customdisplayGraph(handles.ALL(:,:,frame), ...
         masterData(frame).VALL, masterData(frame).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX]);
-    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+    set(gca, 'XLim', xlim);
+    set(gca, 'YLim', ylim);
     handles.isAdd = 0; handles.masterData = masterData;
     handles.vDT = setVVoronoi(handles);
     guidata(hObject,handles)
@@ -136,6 +139,7 @@ if handles.addEdge == 1
     handles.addEdge = 2;
     display(handles.addE(1));
     guidata(hObject,handles)
+    return;
 end
 
 if handles.addEdge == 2
@@ -170,11 +174,13 @@ if handles.addEdge == 2
     masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
         tmp];
     frame = str2double(get(handles.frame,'String'));
+    xlim = get(gca,'XLim');
+    ylim = get(gca,'YLim');
     [handles.vH, handles.eH, handles.cpH] = ...
         customdisplayGraph(handles.ALL(:,:,frame), ...
         masterData(frame).VALL, masterData(frame).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX]);
-    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+    set(gca,'XLim',xlim)
+    set(gca,'YLim',ylim)
     handles.addEdge = 0;
     handles.masterData = masterData;
     handles.eDT = setEVoronoi(handles);
@@ -217,6 +223,7 @@ guidata(hObject,handles)
 function trackPoint(hObject,eventdata)
 handles = guidata(hObject);
 if handles.vertexIdx ~= -1 && handles.vD < handles.eD
+    xlim = get(gca,'XLim'); ylim = get(gca,'YLim');
     %move point here
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
@@ -243,8 +250,8 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
     end
-    set(gca, 'XLim', [handles.zStX handles.zStoX])
-    set(gca, 'YLim', [handles.zStY handles.zStoY])
+    set(gca,'XLim',xlim)
+    set(gca,'YLim',ylim)
     handles.masterData = masterData;
     guidata(hObject,handles);
     vH = handles.vH; vProp = vH{handles.vertexIdx};
@@ -284,6 +291,7 @@ if handles.onV
         for n = 1:numel(edge)
             handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
             set(handles.eH{edge(n)},'Visible','off') % Edges visible off
+            handles.cpH{edge(n)} = []; % Delete plotted control points
             adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
             adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
             handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
@@ -303,6 +311,7 @@ if handles.onE
     handles.masterData(1).ADJLIST{vIndex2} = adjMatrix2; % Reset
     set(handles.eH{index},'Visible','off')
     set(handles.cpH{index},'Visible','off')
+    handles.cpH{index} = [];
     handles.masterData(1).EALL{index} = [];
 end
 
@@ -324,6 +333,9 @@ function showGraph_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 mD = handles.masterData;
 frame = str2double(get(handles.frame,'String'));
+if size(mD,2) < frame
+    error('No data on that frame!')
+end
 [handles.vH, handles.eH, handles.cpH] = ...
     customdisplayGraph(handles.ALL(:,:,frame), ...
     mD(frame).VALL, mD(frame).EALL, 'on');
