@@ -284,6 +284,7 @@ if handles.onV
         for n = 1:numel(edge)
             handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
             set(handles.eH{edge(n)},'Visible','off') % Edges visible off
+            handles.cpH{edge(n)} = []; % Delete plotted control points
             adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
             adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
             handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
@@ -303,6 +304,7 @@ if handles.onE
     handles.masterData(1).ADJLIST{vIndex2} = adjMatrix2; % Reset
     set(handles.eH{index},'Visible','off')
     set(handles.cpH{index},'Visible','off')
+    handles.cpH{index} = [];
     handles.masterData(1).EALL{index} = [];
 end
 
@@ -324,6 +326,9 @@ function showGraph_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 mD = handles.masterData;
 frame = str2double(get(handles.frame,'String'));
+if size(mD,1) < frame
+    error('No data on that frame!')
+end
 [handles.vH, handles.eH, handles.cpH] = ...
     customdisplayGraph(handles.ALL(:,:,frame), ...
     mD(frame).VALL, mD(frame).EALL, 'on');

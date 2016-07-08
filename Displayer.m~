@@ -79,7 +79,7 @@ handles.prevVIdx = 1; handles.onV = false;
 handles.prevEIdx = 1; handles.onE = false;
 guidata(hObject,handles)
 
-%showGraph_Callback(handles.showGraph,eventdata,handles); % Initializes window
+showGraph_Callback(handles.showGraph,eventdata,handles); % Initializes window
 set(gca,'Visible','off') %Turns off axes
 
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
@@ -324,6 +324,8 @@ function showGraph_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 mD = handles.masterData;
 frame = str2double(get(handles.frame,'String'));
+if isempty(mD.frame)
+    error('No data on that
 [handles.vH, handles.eH, handles.cpH] = ...
     customdisplayGraph(handles.ALL(:,:,frame), ...
     mD(frame).VALL, mD(frame).EALL, 'on');
@@ -415,8 +417,9 @@ function load_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 [file1, path1] = uigetfile({'*.mat';'*.*'}, 'Choose a pre-processed .mat file.');
-handles.masterData = load([path1,file1]);
+data = load([path1,file1]);
+handles.masterData = data.data;
 [file2, path2] = uigetfile({'*.tif';'*.*'}, 'Choose a pre-processed .tif stack.');
 stack = loadtiff([path2,file2]);
 handles.ALL = padarray(stack, [20,20,0]);
-showRaw_Callback(handles.showRaw)
+guidata(hObject,handles)
