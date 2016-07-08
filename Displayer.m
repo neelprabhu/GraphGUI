@@ -415,7 +415,8 @@ function load_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 [file1, path1] = uigetfile({'*.mat';'*.*'}, 'Choose a pre-processed .mat file.');
-handles.masterData = load([path1,file1]);
+data = load([path1,file1]);
+handles.masterData = data.data;
 [file2, path2] = uigetfile({'*.tif';'*.*'}, 'Choose a pre-processed .tif stack.');
 stack = loadtiff([path2,file2]);
 handles.ALL = padarray(stack, [20,20,0]);
