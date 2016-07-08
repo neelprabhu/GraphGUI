@@ -243,10 +243,12 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
         
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
-        updateSplineEndPts_A(spline1, controls(:,1), controls(:,length(controls)));
-%         spline1.handles = splineDraw(spline1);
+        spline1 = updateSplineEndPts_A(spline1, controls(:,1), controls(:,length(controls)));
+        spline1.handles = splineDraw(spline1);
+        masterData(1).EALL{splineNum} = spline1;
 %         spline1.d = splineEvalEven(spline1.d, true, true, spline1.image);
-%         redraw(spline1);
+         redraw(spline1);
+         
     end
     set(gca, 'XLim', [handles.zStX handles.zStoX])
     set(gca, 'YLim', [handles.zStY handles.zStoY])
