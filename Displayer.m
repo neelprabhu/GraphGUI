@@ -44,7 +44,7 @@ function Displayer_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Lots of parameters, some unnecessary...
-
+setup;
 l = 17;                 % width of edge window
 w = 25;                 % width of vertex window
 alpha = 0.5;            % scaling edge cost contributions
@@ -54,12 +54,13 @@ parallel = false;       % parallelization with parfor
 verboseE = 0;           % verbose flag for edge optimization
 verboseG = 0;           % verbose flag for vertex optimization
 siftflow = true;        % SIFT flow flag
-fname = ['tmp_grid2_', datestr(clock, 'mmddyy_HH:MM:SS')];
+fname = ['tmp_grid2_', datestr(clock,'mmddyy_HH:MM:SS')];
 handles.options = struct('l',l,'w',w,'alpha',alpha,'interval',interval, ...
     'spacing',spacing,'parallel',parallel,'verboseE',verboseE, ...
     'verboseG',verboseG,'siftflow',siftflow,'fname',fname);
 
 global ALL;
+    
 GT = imread('myGT.png');
 handles.GT = padarray(GT, [20,20]);
 handles.ALL = padarray(ALL, [20,20,0]);
@@ -136,6 +137,7 @@ if handles.addEdge == 1
     handles.addEdge = 2;
     display(handles.addE(1));
     guidata(hObject,handles)
+    return;
 end
 
 if handles.addEdge == 2
@@ -326,7 +328,7 @@ function showGraph_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 mD = handles.masterData;
 frame = str2double(get(handles.frame,'String'));
-if size(mD,1) < frame
+if size(mD,2) < frame
     error('No data on that frame!')
 end
 [handles.vH, handles.eH, handles.cpH] = ...
