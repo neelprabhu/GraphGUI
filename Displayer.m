@@ -120,12 +120,14 @@ if handles.isAdd
     masterData(1).ADJLIST{next+1} = [];
     handles.vIndex = next+1;
     hold on;
+    xlim = get(gca,'XLim');
+    ylim = get(gca,'YLim');
     frame = str2double(get(handles.frame,'String'));
     [handles.vH, handles.eH, handles.cpH] = ...
         customdisplayGraph(handles.ALL(:,:,frame), ...
         masterData(frame).VALL, masterData(frame).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX]);
-    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+    set(gca, 'XLim', xlim);
+    set(gca, 'YLim', ylim);
     handles.isAdd = 0; handles.masterData = masterData;
     handles.vDT = setVVoronoi(handles);
     guidata(hObject,handles)
@@ -172,11 +174,13 @@ if handles.addEdge == 2
     masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
         tmp];
     frame = str2double(get(handles.frame,'String'));
+    xlim = get(gca,'XLim');
+    ylim = get(gca,'YLim');
     [handles.vH, handles.eH, handles.cpH] = ...
         customdisplayGraph(handles.ALL(:,:,frame), ...
         masterData(frame).VALL, masterData(frame).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX]);
-    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+    set(gca,'XLim',xlim)
+    set(gca,'YLim',ylim)
     handles.addEdge = 0;
     handles.masterData = masterData;
     handles.eDT = setEVoronoi(handles);
@@ -219,6 +223,7 @@ guidata(hObject,handles)
 function trackPoint(hObject,eventdata)
 handles = guidata(hObject);
 if handles.vertexIdx ~= -1 && handles.vD < handles.eD
+    xlim = get(gca,'XLim'); ylim = get(gca,'YLim');
     %move point here
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
@@ -245,8 +250,8 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
         controls(:,splineIdx) = newcp;
         masterData(1).EALL{splineNum}.control = controls;
     end
-    set(gca, 'XLim', [handles.zStX handles.zStoX])
-    set(gca, 'YLim', [handles.zStY handles.zStoY])
+    set(gca,'XLim',xlim)
+    set(gca,'YLim',ylim)
     handles.masterData = masterData;
     guidata(hObject,handles);
     vH = handles.vH; vProp = vH{handles.vertexIdx};
