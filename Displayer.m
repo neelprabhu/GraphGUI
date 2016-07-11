@@ -485,7 +485,6 @@ function view_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 % Do nothing
 
-
 function sGraph_Callback(hObject, eventdata, handles)
 % hObject    handle to sGraph (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
