@@ -1,4 +1,4 @@
-function [data] = customMembraneTrack(ALL, GT, options, preData,sFrame,eFrame)
+function [data] = customMembraneTrack(ALL, options, preData,sFrame,eFrame)
 %MEMBRANETRACK Track graph structure in image stream.
 %
 % INPUTS
@@ -80,10 +80,10 @@ end
 
 VALL = cell(1, eFrame); EALL = cell(1, eFrame);
 ADJLIST = cell(1, eFrame); FACELIST = cell(1, eFrame);
-VALL{1} = preData.VALL;
-EALL{1} = preData.EALL;
-ADJLIST{1} = preData.ADJLIST;
-FACELIST{1} = preData.FACELIST; % Allocate frame 1 data
+VALL{1} = preData(sFrame).VALL;
+EALL{1} = preData(sFrame).EALL;
+ADJLIST{1} = preData(sFrame).ADJLIST;
+FACELIST{1} = preData(sFrame).FACELIST; % Allocate frame 1 data
 
 for ii=(sFrame+1):eFrame
     
@@ -100,8 +100,8 @@ for ii=(sFrame+1):eFrame
 	structA = struct('I1', {I1}, 'I2', {I2}, 'I2x', {grad(I2)});
     
 	% update graph
-    structUG = struct('I',{I1},'V',{preData.VALL},'E',{preData.EALL}, ...
-        'adjList',{preData.ADJLIST},'faceList',{preData.FACELIST}); % Absorb data
+    structUG = struct('I',{I1},'V',{VALL{1}},'E',{EALL{1}}, ...
+        'adjList',{ADJLIST{1}},'faceList',{FACELIST{1}}); % Absorb data
     
     [ structUG ] = updateGraph(structUG, structC, structD, parallel);
     V = structUG.V;

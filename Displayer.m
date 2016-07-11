@@ -60,19 +60,19 @@ handles.options = struct('l',l,'w',w,'alpha',alpha,'interval',interval, ...
     'verboseG',verboseG,'siftflow',siftflow,'fname',fname);
 
 global ALL;
-    
 GT = imread('myGT.png');
 handles.GT = padarray(GT, [20,20]);
 handles.ALL = padarray(ALL, [20,20,0]);
 [V,E,A,F] = embryoInitGraph(handles.GT,20,false);
 handles.masterData = struct('VALL',{V},'EALL',{E},'ADJLIST',{A},'FACELIST',{F});
 set(handles.frame,'String','1');
+handles.f = 1;
 
 %% Code for tracking mouse movements and clicks
 
 % Parameters into handles
 handles.vertexIdx = -1; % No vertex selected default
-handles.isAdd = 0; % Not adding element default
+handles.addVertex = 0; % Not adding element default
 handles.addEdge = 0;
 handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
 handles.zStY = 20; handles.zStoY = size(handles.ALL(:,:,1),1)-19;
@@ -114,21 +114,20 @@ end
 [handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
 
 % Adding vertex
-if handles.isAdd
-    next = size(masterData(1).VALL,1);
-    masterData(1).VALL{next+1} = handles.cp;
-    masterData(1).ADJLIST{next+1} = [];
+if handles.addVertex
+    next = size(masterData(handles.f).VALL,1);
+    masterData(handles.f).VALL{next+1} = handles.cp;
+    masterData(handles.f).ADJLIST{next+1} = [];
     handles.vIndex = next+1;
     hold on;
     xlim = get(gca,'XLim');
     ylim = get(gca,'YLim');
-    frame = str2double(get(handles.frame,'String'));
     [handles.vH, handles.eH, handles.cpH] = ...
-        customdisplayGraph(handles.ALL(:,:,frame), ...
-        masterData(frame).VALL, masterData(frame).EALL, 'on');
+        customdisplayGraph(handles.ALL(:,:,handles.f), ...
+        masterData(handles.f).VALL, masterData(handles.f).EALL, 'on');
     set(gca, 'XLim', xlim);
     set(gca, 'YLim', ylim);
-    handles.isAdd = 0; handles.masterData = masterData;
+    handles.addVertex = 0; handles.masterData = masterData;
     handles.vDT = setVVoronoi(handles);
     guidata(hObject,handles)
     return;
@@ -153,10 +152,10 @@ if handles.addEdge == 2
     nctr = k + 2; % Number of control points
     mult = ones(1, nctr - 3);
     
-    control = [masterData(1).VALL{handles.addE(1)}, ...
-        masterData(1).VALL{handles.addE(1),1}+(masterData(1).VALL{handles.addE(2),1}-handles.masterData(1).VALL{handles.addE(1),1}).*(1/3), ...
-        masterData(1).VALL{handles.addE(1),1}+(handles.masterData(1).VALL{handles.addE(2),1}-masterData(1).VALL{handles.addE(1),1}).*(2/3), ...
-        masterData(1).VALL{handles.addE(2),1}];
+    control = [masterData(handles.f).VALL{handles.addE(1)}, ...
+        masterData(handles.f).VALL{handles.addE(1),1}+(masterData(handles.f).VALL{handles.addE(2),1}-handles.masterData(handles.f).VALL{handles.addE(1),1}).*(1/3), ...
+        masterData(handles.f).VALL{handles.addE(1),1}+(handles.masterData(handles.f).VALL{handles.addE(2),1}-masterData(handles.f).VALL{handles.addE(1),1}).*(2/3), ...
+        masterData(handles.f).VALL{handles.addE(2),1}];
     order = 3;
     open = true;
     n = 101;
@@ -164,21 +163,20 @@ if handles.addEdge == 2
     
     s = splineMake(control, order, mult, open, n, makeNeedles);
     
-    next = size(masterData(1).EALL,1);
-    masterData(1).EALL{next+1} = s;
+    next = size(masterData(handles.f).EALL,1);
+    masterData(handles.f).EALL{next+1} = s;
     
     tmp = [handles.addE(2);next+1];
-    masterData(1).ADJLIST{handles.addE(1),1} = [masterData(1).ADJLIST{handles.addE(1),1},...
+    masterData(handles.f).ADJLIST{handles.addE(1),1} = [masterData(handles.f).ADJLIST{handles.addE(1),1},...
         tmp];
     tmp = [handles.addE(1);next+1];
-    masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
+    masterData(handles.f).ADJLIST{handles.addE(2),1} = [masterData(handles.f).ADJLIST{handles.addE(2),1},...
         tmp];
-    frame = str2double(get(handles.frame,'String'));
     xlim = get(gca,'XLim');
     ylim = get(gca,'YLim');
     [handles.vH, handles.eH, handles.cpH] = ...
-        customdisplayGraph(handles.ALL(:,:,frame), ...
-        masterData(frame).VALL, masterData(frame).EALL, 'on');
+        customdisplayGraph(handles.ALL(:,:,handles.f), ...
+        masterData(handles.f).VALL, masterData(handles.f).EALL, 'on');
     set(gca,'XLim',xlim)
     set(gca,'YLim',ylim)
     handles.addEdge = 0;
@@ -228,27 +226,27 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
     masterData = handles.masterData; %Gets the data struct
-    masterData(1).VALL{handles.vertexIdx} = newcp;
+    masterData(handles.f).VALL{handles.vertexIdx} = newcp;
     
-    edge = masterData(1).ADJLIST{handles.vertexIdx};
+    edge = masterData(handles.f).ADJLIST{handles.vertexIdx};
     edgeSize = size(edge);
     for i = 1:edgeSize(2)
         splineNum = edge(2,i);
-        spline1 = masterData(1).EALL{splineNum};
+        spline1 = masterData(handles.f).EALL{splineNum};
         splineIdx = 1;
         minn = 1000;
         controls = spline1.control;
         for j = 1: length(controls)
             spl = controls(:, j);
-            subb = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + ...
-                abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2));
+            subb = abs(spl(1) - masterData(handles.f).VALL{handles.vertexIdx}(1)) + ...
+                abs (spl(2) - masterData(handles.f).VALL{handles.vertexIdx}(2));
             if subb < minn
                 minn = subb;
                 splineIdx = j;
             end          
         end
         controls(:,splineIdx) = newcp;
-        masterData(1).EALL{splineNum}.control = controls;
+        masterData(handles.f).EALL{splineNum}.control = controls;
     end
     set(gca,'XLim',xlim)
     set(gca,'YLim',ylim)
@@ -260,8 +258,10 @@ end
 
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
-handles.vertexIdx = -1;
-handles.vDT = setVVoronoi(handles);
+if handles.vertexIdx ~= -1
+    handles.vertexIdx = -1;
+    handles.vDT = setVVoronoi(handles);
+end
 guidata(hObject,handles)
 
 function buttonPress(hObject,eventdata)
@@ -271,7 +271,7 @@ switch eventdata.Key
         newhandles = deleteVE(handles);
         guidata(hObject,newhandles)
     case 'n'
-        handles.isAdd = 1;
+        handles.addVertex = 1;
         guidata(hObject,handles)
     otherwise % do nothing
 end
@@ -280,39 +280,39 @@ function handles = deleteVE(handles)
 if handles.onV
     index = handles.vIndex;
     set(handles.vH{index},'Visible','off')
-    handles.masterData(1).VALL{index} = [NaN;NaN];
-    adj = handles.masterData(1).ADJLIST{index}; % More deletions
+    handles.masterData(handles.f).VALL{index} = [NaN;NaN];
+    adj = handles.masterData(handles.f).ADJLIST{index}; % More deletions
     if isempty(adj)
         return;
     else
         vert = adj(1,:);
         edge = adj(2,:);
-        handles.masterData(1).ADJLIST{index} = [NaN;NaN]; % Get rid of deleted vertex ADJLIST
+        handles.masterData(handles.f).ADJLIST{index} = [NaN;NaN]; % Get rid of deleted vertex ADJLIST
         for n = 1:numel(edge)
-            handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
+            handles.masterData(handles.f).EALL{edge(n)} = []; % Get rid of incident
             set(handles.eH{edge(n)},'Visible','off') % Edges visible off
             handles.cpH{edge(n)} = []; % Delete plotted control points
-            adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
+            adjMatrix = handles.masterData(handles.f).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
             adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
-            handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
+            handles.masterData(handles.f).ADJLIST{vert(n)} = adjMatrix; % Reset
         end
     end
 end
 if handles.onE
     index = handles.eIndex;
-    ctrlMatrix = handles.masterData(1).EALL{index}.control;
+    ctrlMatrix = handles.masterData(handles.f).EALL{index}.control;
     vIndex1 = nearestNeighbor(handles.vDT,ctrlMatrix(:,1)');
     vIndex2 = nearestNeighbor(handles.vDT,ctrlMatrix(:,end)');
-    adjMatrix1 = handles.masterData(1).ADJLIST{vIndex1};
+    adjMatrix1 = handles.masterData(handles.f).ADJLIST{vIndex1};
     adjMatrix1(:,find(adjMatrix1(1,:) == vIndex2)) = []; 
-    adjMatrix2 = handles.masterData(1).ADJLIST{vIndex2};
+    adjMatrix2 = handles.masterData(handles.f).ADJLIST{vIndex2};
     adjMatrix2(:,find(adjMatrix2(1,:) == vIndex1)) = []; % Get rid of adjacencies
-    handles.masterData(1).ADJLIST{vIndex1} = adjMatrix1;
-    handles.masterData(1).ADJLIST{vIndex2} = adjMatrix2; % Reset
+    handles.masterData(handles.f).ADJLIST{vIndex1} = adjMatrix1;
+    handles.masterData(handles.f).ADJLIST{vIndex2} = adjMatrix2; % Reset
     set(handles.eH{index},'Visible','off')
     set(handles.cpH{index},'Visible','off')
     handles.cpH{index} = [];
-    handles.masterData(1).EALL{index} = [];
+    handles.masterData(handles.f).EALL{index} = [];
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -332,13 +332,12 @@ function showGraph_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 mD = handles.masterData;
-frame = str2double(get(handles.frame,'String'));
-if size(mD,2) < frame
+if size(mD,2) < handles.f
     error('No data on that frame!')
 end
 [handles.vH, handles.eH, handles.cpH] = ...
-    customdisplayGraph(handles.ALL(:,:,frame), ...
-    mD(frame).VALL, mD(frame).EALL, 'on');
+    customdisplayGraph(handles.ALL(:,:,handles.f), ...
+    mD(handles.f).VALL, mD(handles.f).EALL, 'on');
 set(gca, 'XLim', [handles.zStX handles.zStoX])
 set(gca, 'YLim', [handles.zStY handles.zStoY])
 guidata(hObject,handles)
@@ -350,8 +349,14 @@ function frame_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of frame as text
 %        str2double(get(hObject,'String')) returns contents of frame as a double
+handles = guidata(hObject);
+handles.f = str2double(get(hObject,'String'));
+if size(handles.masterData,2) >= handles.f
+    handles.vDT = setVVoronoi(handles);
+    handles.eDT = setEVoronoi(handles);
+end
+guidata(hObject,handles)
 showRaw_Callback(hObject,eventdata,handles)
-
 
 function frame_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
@@ -370,7 +375,7 @@ function add_element_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
-handles.isAdd = ~handles.isAdd;
+handles.addVertex = ~handles.addVertex;
 guidata(hObject,handles)
 
 
@@ -405,8 +410,8 @@ dlg_title = 'Tracking Options'; num_lines = 1; defaultans = {'1','2'};
 handles = guidata(hObject);
 answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
 sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
-[handles.masterData] = customMembraneTrack(handles.ALL, handles.GT, ...
-    handles.options, handles.masterData,sFrame,eFrame);
+[handles.masterData] = customMembraneTrack(handles.ALL, ...
+    handles.options, handles.masterData,sFrame,eFrame); %Check! overwriting masterData.
 guidata(hObject,handles)
 
 
