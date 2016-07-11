@@ -3,8 +3,8 @@ function dt = setVVoronoi(handles)
 % @author Neel K. Prabhu
 
 masterData = handles.masterData;
-VALL = masterData(1).VALL;
-EALL = masterData(1).EALL;
+VALL = masterData(handles.f).VALL;
+EALL = masterData(handles.f).EALL;
 vMatrix = zeros(numel(VALL),2);
 
 counter = 0;
@@ -17,5 +17,4 @@ for n = 1:numel(VALL)
         counter = counter - 1;
     end
 end
-%vMatrix = unique(vMatrix,'rows','stable');
 dt = delaunayTriangulation(vMatrix);

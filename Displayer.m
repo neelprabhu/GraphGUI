@@ -44,7 +44,7 @@ function Displayer_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Lots of parameters, some unnecessary...
-
+setup;
 l = 17;                 % width of edge window
 w = 25;                 % width of vertex window
 alpha = 0.5;            % scaling edge cost contributions
@@ -54,7 +54,7 @@ parallel = false;       % parallelization with parfor
 verboseE = 0;           % verbose flag for edge optimization
 verboseG = 0;           % verbose flag for vertex optimization
 siftflow = true;        % SIFT flow flag
-fname = ['tmp_grid2_', datestr(clock, 'mmddyy_HH:MM:SS')];
+fname = ['tmp_grid2_', datestr(clock,'mmddyy_HH:MM:SS')];
 handles.options = struct('l',l,'w',w,'alpha',alpha,'interval',interval, ...
     'spacing',spacing,'parallel',parallel,'verboseE',verboseE, ...
     'verboseG',verboseG,'siftflow',siftflow,'fname',fname);
@@ -66,6 +66,7 @@ handles.ALL = padarray(ALL, [20,20,0]);
 [V,E,A,F] = embryoInitGraph(handles.GT,20,false);
 handles.masterData = struct('VALL',{V},'EALL',{E},'ADJLIST',{A},'FACELIST',{F});
 set(handles.frame,'String','1');
+handles.f = 1;
 
 %% Code for tracking mouse movements and clicks
 
@@ -73,6 +74,7 @@ set(handles.frame,'String','1');
 handles.vertexIdx = -1; % No vertex selected default
 handles.clickDown = 0;
 handles.isAdd = 0; % Not adding element default
+handles.addVertex = 0; % Not adding element default
 handles.addEdge = 0;
 handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
 handles.zStY = 20; handles.zStoY = size(handles.ALL(:,:,1),1)-19;
@@ -115,19 +117,20 @@ end
 [handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
 
 % Adding vertex
-if handles.isAdd
-    next = size(masterData(1).VALL,1);
-    masterData(1).VALL{next+1} = handles.cp;
-    masterData(1).ADJLIST{next+1} = [];
+if handles.addVertex
+    next = size(masterData(handles.f).VALL,1);
+    masterData(handles.f).VALL{next+1} = handles.cp;
+    masterData(handles.f).ADJLIST{next+1} = [];
     handles.vIndex = next+1;
     hold on;
-    frame = str2double(get(handles.frame,'String'));
+    xlim = get(gca,'XLim');
+    ylim = get(gca,'YLim');
     [handles.vH, handles.eH, handles.cpH] = ...
-        customdisplayGraph(handles.ALL(:,:,frame), ...
-        masterData(frame).VALL, masterData(frame).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX]);
-    set(gca, 'YLim', [handles.zStY handles.zStoY]);
-    handles.isAdd = 0; handles.masterData = masterData;
+        customdisplayGraph(handles.ALL(:,:,handles.f), ...
+        masterData(handles.f).VALL, masterData(handles.f).EALL, 'on');
+    set(gca, 'XLim', xlim);
+    set(gca, 'YLim', ylim);
+    handles.addVertex = 0; handles.masterData = masterData;
     handles.vDT = setVVoronoi(handles);
     guidata(hObject,handles)
     return;
@@ -138,6 +141,7 @@ if handles.addEdge == 1
     handles.addEdge = 2;
     display(handles.addE(1));
     guidata(hObject,handles)
+    return;
 end
 
 if handles.addEdge == 2
@@ -151,10 +155,10 @@ if handles.addEdge == 2
     nctr = k + 2; % Number of control points
     mult = ones(1, nctr - 3);
     
-    control = [masterData(1).VALL{handles.addE(1)}, ...
-        masterData(1).VALL{handles.addE(1),1}+(masterData(1).VALL{handles.addE(2),1}-handles.masterData(1).VALL{handles.addE(1),1}).*(1/3), ...
-        masterData(1).VALL{handles.addE(1),1}+(handles.masterData(1).VALL{handles.addE(2),1}-masterData(1).VALL{handles.addE(1),1}).*(2/3), ...
-        masterData(1).VALL{handles.addE(2),1}];
+    control = [masterData(handles.f).VALL{handles.addE(1)}, ...
+        masterData(handles.f).VALL{handles.addE(1),1}+(masterData(handles.f).VALL{handles.addE(2),1}-handles.masterData(handles.f).VALL{handles.addE(1),1}).*(1/3), ...
+        masterData(handles.f).VALL{handles.addE(1),1}+(handles.masterData(handles.f).VALL{handles.addE(2),1}-masterData(handles.f).VALL{handles.addE(1),1}).*(2/3), ...
+        masterData(handles.f).VALL{handles.addE(2),1}];
     order = 3;
     open = true;
     n = 101;
@@ -162,21 +166,22 @@ if handles.addEdge == 2
     
     s = splineMake(control, order, mult, open, n, makeNeedles);
     
-    next = size(masterData(1).EALL,1);
-    masterData(1).EALL{next+1} = s;
+    next = size(masterData(handles.f).EALL,1);
+    masterData(handles.f).EALL{next+1} = s;
     
     tmp = [handles.addE(2);next+1];
-    masterData(1).ADJLIST{handles.addE(1),1} = [masterData(1).ADJLIST{handles.addE(1),1},...
+    masterData(handles.f).ADJLIST{handles.addE(1),1} = [masterData(handles.f).ADJLIST{handles.addE(1),1},...
         tmp];
     tmp = [handles.addE(1);next+1];
-    masterData(1).ADJLIST{handles.addE(2),1} = [masterData(1).ADJLIST{handles.addE(2),1},...
+    masterData(handles.f).ADJLIST{handles.addE(2),1} = [masterData(handles.f).ADJLIST{handles.addE(2),1},...
         tmp];
-    frame = str2double(get(handles.frame,'String'));
+    xlim = get(gca,'XLim');
+    ylim = get(gca,'YLim');
     [handles.vH, handles.eH, handles.cpH] = ...
-        customdisplayGraph(handles.ALL(:,:,frame), ...
-        masterData(frame).VALL, masterData(frame).EALL, 'on');
-    set(gca, 'XLim', [handles.zStX handles.zStoX]);
-    set(gca, 'YLim', [handles.zStY handles.zStoY]);
+        customdisplayGraph(handles.ALL(:,:,handles.f), ...
+        masterData(handles.f).VALL, masterData(handles.f).EALL, 'on');
+    set(gca,'XLim',xlim)
+    set(gca,'YLim',ylim)
     handles.addEdge = 0;
     handles.masterData = masterData;
     handles.eDT = setEVoronoi(handles);
@@ -228,7 +233,7 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     edgeSize = size(edge);
     for i = 1:edgeSize(2)
         splineNum = edge(2,i);
-        spline1 = masterData(1).EALL{splineNum};
+        spline1 = masterData(handles.f).EALL{splineNum};
         splineIdx = 1;
         controls = spline1.control;
 
@@ -251,8 +256,8 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
         set(handles.cpH{splineNum},'XData', spline1.control(1,:));
         set(handles.cpH{splineNum},'YData', spline1.control(2,:));
     end
-    set(gca, 'XLim', [handles.zStX handles.zStoX])
-    set(gca, 'YLim', [handles.zStY handles.zStoY])
+    set(gca,'XLim',xlim)
+    set(gca,'YLim',ylim)
     handles.masterData = masterData;
     guidata(hObject,handles);
     vH = handles.vH; vProp = vH{handles.vertexIdx};
@@ -286,9 +291,11 @@ end
 
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
-handles.vertexIdx = -1;
 handles.clickDown = 0;
-handles.vDT = setVVoronoi(handles);
+if handles.vertexIdx ~= -1
+    handles.vertexIdx = -1;
+    handles.vDT = setVVoronoi(handles);
+end
 guidata(hObject,handles)
 
 
@@ -307,7 +314,7 @@ switch eventdata.Key
         newhandles = deleteVE(handles);
         guidata(hObject,newhandles)
     case 'n'
-        handles.isAdd = 1;
+        handles.addVertex = 1;
         guidata(hObject,handles)
     otherwise % do nothing
 end
@@ -316,37 +323,39 @@ function handles = deleteVE(handles)
 if handles.onV
     index = handles.vIndex;
     set(handles.vH{index},'Visible','off')
-    handles.masterData(1).VALL{index} = [NaN;NaN];
-    adj = handles.masterData(1).ADJLIST{index}; % More deletions
+    handles.masterData(handles.f).VALL{index} = [NaN;NaN];
+    adj = handles.masterData(handles.f).ADJLIST{index}; % More deletions
     if isempty(adj)
         return;
     else
         vert = adj(1,:);
         edge = adj(2,:);
-        handles.masterData(1).ADJLIST{index} = [NaN;NaN]; % Get rid of deleted vertex ADJLIST
+        handles.masterData(handles.f).ADJLIST{index} = [NaN;NaN]; % Get rid of deleted vertex ADJLIST
         for n = 1:numel(edge)
-            handles.masterData(1).EALL{edge(n)} = []; % Get rid of incident
+            handles.masterData(handles.f).EALL{edge(n)} = []; % Get rid of incident
             set(handles.eH{edge(n)},'Visible','off') % Edges visible off
-            adjMatrix = handles.masterData(1).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
+            handles.cpH{edge(n)} = []; % Delete plotted control points
+            adjMatrix = handles.masterData(handles.f).ADJLIST{vert(n)}; % Adjacent vertices' ADJLIST
             adjMatrix(:,find(adjMatrix(1,:) == index)) = []; % Delete the old entry
-            handles.masterData(1).ADJLIST{vert(n)} = adjMatrix; % Reset
+            handles.masterData(handles.f).ADJLIST{vert(n)} = adjMatrix; % Reset
         end
     end
 end
 if handles.onE
     index = handles.eIndex;
-    ctrlMatrix = handles.masterData(1).EALL{index}.control;
+    ctrlMatrix = handles.masterData(handles.f).EALL{index}.control;
     vIndex1 = nearestNeighbor(handles.vDT,ctrlMatrix(:,1)');
     vIndex2 = nearestNeighbor(handles.vDT,ctrlMatrix(:,end)');
-    adjMatrix1 = handles.masterData(1).ADJLIST{vIndex1};
+    adjMatrix1 = handles.masterData(handles.f).ADJLIST{vIndex1};
     adjMatrix1(:,find(adjMatrix1(1,:) == vIndex2)) = []; 
-    adjMatrix2 = handles.masterData(1).ADJLIST{vIndex2};
+    adjMatrix2 = handles.masterData(handles.f).ADJLIST{vIndex2};
     adjMatrix2(:,find(adjMatrix2(1,:) == vIndex1)) = []; % Get rid of adjacencies
-    handles.masterData(1).ADJLIST{vIndex1} = adjMatrix1;
-    handles.masterData(1).ADJLIST{vIndex2} = adjMatrix2; % Reset
+    handles.masterData(handles.f).ADJLIST{vIndex1} = adjMatrix1;
+    handles.masterData(handles.f).ADJLIST{vIndex2} = adjMatrix2; % Reset
     set(handles.eH{index},'Visible','off')
     set(handles.cpH{index},'Visible','off')
-    handles.masterData(1).EALL{index} = [];
+    handles.cpH{index} = [];
+    handles.masterData(handles.f).EALL{index} = [];
 end
 
 % --- Outputs from this function are returned to the command line.
@@ -366,10 +375,12 @@ function showGraph_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
 mD = handles.masterData;
-frame = str2double(get(handles.frame,'String'));
+if size(mD,2) < handles.f
+    error('No data on that frame!')
+end
 [handles.vH, handles.eH, handles.cpH] = ...
-    customdisplayGraph(handles.ALL(:,:,frame), ...
-    mD(frame).VALL, mD(frame).EALL, 'on');
+    customdisplayGraph(handles.ALL(:,:,handles.f), ...
+    mD(handles.f).VALL, mD(handles.f).EALL, 'on');
 set(gca, 'XLim', [handles.zStX handles.zStoX])
 set(gca, 'YLim', [handles.zStY handles.zStoY])
 guidata(hObject,handles)
@@ -381,8 +392,14 @@ function frame_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of frame as text
 %        str2double(get(hObject,'String')) returns contents of frame as a double
+handles = guidata(hObject);
+handles.f = str2double(get(hObject,'String'));
+if size(handles.masterData,2) >= handles.f
+    handles.vDT = setVVoronoi(handles);
+    handles.eDT = setEVoronoi(handles);
+end
+guidata(hObject,handles)
 showRaw_Callback(hObject,eventdata,handles)
-
 
 function frame_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to frame (see GCBO)
@@ -401,9 +418,8 @@ function add_element_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles = guidata(hObject);
-handles.isAdd = ~handles.isAdd;
+handles.addVertex = ~handles.addVertex;
 guidata(hObject,handles)
-
 
 function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
@@ -411,21 +427,6 @@ function showRaw_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 frame = str2double(get(handles.frame,'String'));
 imagesc(handles.ALL(:,:,frame));
-
-function Untitled_1_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-function Untitled_4_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-function Untitled_5_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_5 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 function open_track_Callback(hObject, eventdata, handles)
 % hObject    handle to open_track (see GCBO)
@@ -436,10 +437,9 @@ dlg_title = 'Tracking Options'; num_lines = 1; defaultans = {'1','2'};
 handles = guidata(hObject);
 answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
 sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
-[handles.masterData] = customMembraneTrack(handles.ALL, handles.GT, ...
-    handles.options, handles.masterData,sFrame,eFrame);
+[handles.masterData] = customMembraneTrack(handles.ALL, ...
+    handles.options, handles.masterData,sFrame,eFrame); %Check! overwriting masterData.
 guidata(hObject,handles)
-
 
 % --- Executes on button press in add_edge.
 function add_edge_Callback(hObject, eventdata, handles)
@@ -449,7 +449,6 @@ function add_edge_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 handles.addEdge = 1;
 guidata(hObject,handles)
-
 
 % --- Executes on button press in load.
 function load_Callback(hObject, eventdata, handles)
@@ -464,3 +463,65 @@ handles.masterData = data.data;
 stack = loadtiff([path2,file2]);
 handles.ALL = padarray(stack, [20,20,0]);
 guidata(hObject,handles)
+
+
+%% Menu items
+
+function file_Callback(hObject, eventdata, handles)
+% hObject    handle to file (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+function edit_Callback(hObject, eventdata, handles)
+% hObject    handle to edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+function view_Callback(hObject, eventdata, handles)
+% hObject    handle to view (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+
+function sGraph_Callback(hObject, eventdata, handles)
+% hObject    handle to sGraph (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function sRaw_Callback(hObject, eventdata, handles)
+% hObject    handle to sRaw (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function addV_Callback(hObject, eventdata, handles)
+% hObject    handle to addV (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function addE_Callback(hObject, eventdata, handles)
+% hObject    handle to addE (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function delete_Callback(hObject, eventdata, handles)
+% hObject    handle to delete (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function goFrame_Callback(hObject, eventdata, handles)
+% hObject    handle to goFrame (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function dataLoad_Callback(hObject, eventdata, handles)
+% hObject    handle to dataLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function track_Callback(hObject, eventdata, handles)
+% hObject    handle to track (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

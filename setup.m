@@ -12,4 +12,3 @@ allpaths = strsplit(libpaths, ':');
 for ii = 1:numel(allpaths)
     javaaddpath(allpaths{ii});
 end
-clear
