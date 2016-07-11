@@ -17,5 +17,4 @@ for n = 1:numel(VALL)
         counter = counter - 1;
     end
 end
-%vMatrix = unique(vMatrix,'rows','stable');
 dt = delaunayTriangulation(vMatrix);

@@ -378,28 +378,12 @@ handles = guidata(hObject);
 handles.addVertex = ~handles.addVertex;
 guidata(hObject,handles)
 
-
 function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 frame = str2double(get(handles.frame,'String'));
 imagesc(handles.ALL(:,:,frame));
-
-function Untitled_1_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-function Untitled_4_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_4 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-function Untitled_5_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_5 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 function open_track_Callback(hObject, eventdata, handles)
 % hObject    handle to open_track (see GCBO)
@@ -414,7 +398,6 @@ sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
     handles.options, handles.masterData,sFrame,eFrame); %Check! overwriting masterData.
 guidata(hObject,handles)
 
-
 % --- Executes on button press in add_edge.
 function add_edge_Callback(hObject, eventdata, handles)
 % hObject    handle to add_edge (see GCBO)
@@ -423,7 +406,6 @@ function add_edge_Callback(hObject, eventdata, handles)
 handles = guidata(hObject);
 handles.addEdge = 1;
 guidata(hObject,handles)
-
 
 % --- Executes on button press in load.
 function load_Callback(hObject, eventdata, handles)
@@ -438,3 +420,65 @@ handles.masterData = data.data;
 stack = loadtiff([path2,file2]);
 handles.ALL = padarray(stack, [20,20,0]);
 guidata(hObject,handles)
+
+
+%% Menu items
+
+function file_Callback(hObject, eventdata, handles)
+% hObject    handle to file (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+function edit_Callback(hObject, eventdata, handles)
+% hObject    handle to edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+function view_Callback(hObject, eventdata, handles)
+% hObject    handle to view (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+
+function sGraph_Callback(hObject, eventdata, handles)
+% hObject    handle to sGraph (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function sRaw_Callback(hObject, eventdata, handles)
+% hObject    handle to sRaw (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function addV_Callback(hObject, eventdata, handles)
+% hObject    handle to addV (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function addE_Callback(hObject, eventdata, handles)
+% hObject    handle to addE (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function delete_Callback(hObject, eventdata, handles)
+% hObject    handle to delete (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function goFrame_Callback(hObject, eventdata, handles)
+% hObject    handle to goFrame (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function dataLoad_Callback(hObject, eventdata, handles)
+% hObject    handle to dataLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+function track_Callback(hObject, eventdata, handles)
+% hObject    handle to track (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
