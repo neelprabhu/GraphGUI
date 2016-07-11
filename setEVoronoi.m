@@ -3,7 +3,7 @@ function dt = setEVoronoi(handles)
 % @author Neel K. Prabhu
 
 masterData = handles.masterData;
-EALL = masterData(1).EALL;
+EALL = masterData(handles.f).EALL;
 eMatrix = zeros(numel(EALL),2);
 
 counter = 0;
