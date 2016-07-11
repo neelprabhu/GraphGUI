@@ -230,9 +230,8 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
         splineNum = edge(2,i);
         spline1 = masterData(1).EALL{splineNum};
         splineIdx = 1;
-
         controls = spline1.control;
-       %for j = 1: 2
+
         spl = controls(:, 1);
         minn = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + ...
                 abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2));
@@ -243,14 +242,14 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
                 splineIdx = length(controls);
         end       
         
-        controls(:,splineIdx) = newcp;
-        masterData(1).EALL{splineNum}.control = controls;
-        spline1 = updateSplineEndPts_A(spline1, controls(:,1), controls(:,length(controls)));
-        spline1.handles = splineDraw(spline1);
+        controls(:, splineIdx) = newcp;
+        spline1.control = controls;
+        spline1 = splineEvalEven(spline1, true, true, false);
         masterData(1).EALL{splineNum} = spline1;
-%         spline1.d = splineEvalEven(spline1.d, true, true, spline1.image);
-         redraw(spline1);
-         
+        set(handles.eH{splineNum},'XData', spline1.curve(1,:));
+        set(handles.eH{splineNum},'YData', spline1.curve(2,:));
+        set(handles.cpH{splineNum},'XData', spline1.control(1,:));
+        set(handles.cpH{splineNum},'YData', spline1.control(2,:));
     end
     set(gca, 'XLim', [handles.zStX handles.zStoX])
     set(gca, 'YLim', [handles.zStY handles.zStoY])
@@ -264,7 +263,7 @@ if handles.onE && handles.clickDown == 1
     controls = spline1.control;
     controlIdx = 1;
     minn = 10000;
-    for j = 1: length(controls)
+    for j = 2: length(controls)-1
         spl = controls(:,j);
         subb = abs(spl(1) - newcp(1)) + ...
                 abs (spl(2) - newcp(2));
@@ -273,15 +272,14 @@ if handles.onE && handles.clickDown == 1
                 minn = subb;
         end
     end
-        %handles.eH{handles.edgeIdx} = 
         controls(:, controlIdx) = newcp;
-        %masterData(1).EALL{handles.edgeIdx}.control = controls;
         spline1.control = controls;
-        spline1.handles = splineDraw(spline1);
         spline1 = splineEvalEven(spline1, true, true, false);
-        spline1 = redraw(spline1);
         masterData(1).EALL{handles.edgeIdx} = spline1;
-    
+        set(handles.eH{handles.edgeIdx},'XData', spline1.curve(1,:));
+        set(handles.eH{handles.edgeIdx},'YData', spline1.curve(2,:));
+        set(handles.cpH{handles.edgeIdx},'XData', spline1.control(1,:));
+        set(handles.cpH{handles.edgeIdx},'YData', spline1.control(2,:));
     handles.masterData = masterData;
     guidata(hObject,handles);
 end
