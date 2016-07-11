@@ -72,6 +72,8 @@ handles.f = 1;
 
 % Parameters into handles
 handles.vertexIdx = -1; % No vertex selected default
+handles.clickDown = 0;
+handles.isAdd = 0; % Not adding element default
 handles.addVertex = 0; % Not adding element default
 handles.addEdge = 0;
 handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
@@ -101,6 +103,7 @@ handles = guidata(hObject);
 masterData = handles.masterData;
 prelimPoint = get(gca,'CurrentPoint');
 prelimPoint = prelimPoint(1,1:2);
+handles.clickDown = 1;
 
 if inpolygon(prelimPoint(1),prelimPoint(2), ...
         [handles.zStX handles.zStoX],[handles.zStY handles.zStoY])
@@ -220,33 +223,38 @@ guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
 handles = guidata(hObject);
-if handles.vertexIdx ~= -1 && handles.vD < handles.eD
-    xlim = get(gca,'XLim'); ylim = get(gca,'YLim');
-    %move point here
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
     masterData = handles.masterData; %Gets the data struct
-    masterData(handles.f).VALL{handles.vertexIdx} = newcp;
-    
-    edge = masterData(handles.f).ADJLIST{handles.vertexIdx};
+if handles.vertexIdx ~= -1 && handles.vD < handles.eD
+    %move point here
+    masterData(1).VALL{handles.vertexIdx} = newcp;
+    edge = masterData(1).ADJLIST{handles.vertexIdx};
     edgeSize = size(edge);
     for i = 1:edgeSize(2)
         splineNum = edge(2,i);
         spline1 = masterData(handles.f).EALL{splineNum};
         splineIdx = 1;
-        minn = 1000;
         controls = spline1.control;
-        for j = 1: length(controls)
-            spl = controls(:, j);
-            subb = abs(spl(1) - masterData(handles.f).VALL{handles.vertexIdx}(1)) + ...
-                abs (spl(2) - masterData(handles.f).VALL{handles.vertexIdx}(2));
-            if subb < minn
-                minn = subb;
-                splineIdx = j;
-            end          
-        end
-        controls(:,splineIdx) = newcp;
-        masterData(handles.f).EALL{splineNum}.control = controls;
+
+        spl = controls(:, 1);
+        minn = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + ...
+                abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2));
+        spl = controls(:, length(controls));
+        subb = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + ...
+                abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2));
+        if subb < minn
+                splineIdx = length(controls);
+        end       
+        
+        controls(:, splineIdx) = newcp;
+        spline1.control = controls;
+        spline1 = splineEvalEven(spline1, true, true, false);
+        masterData(1).EALL{splineNum} = spline1;
+        set(handles.eH{splineNum},'XData', spline1.curve(1,:));
+        set(handles.eH{splineNum},'YData', spline1.curve(2,:));
+        set(handles.cpH{splineNum},'XData', spline1.control(1,:));
+        set(handles.cpH{splineNum},'YData', spline1.control(2,:));
     end
     set(gca,'XLim',xlim)
     set(gca,'YLim',ylim)
@@ -255,15 +263,50 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     vH = handles.vH; vProp = vH{handles.vertexIdx};
     set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
+if handles.onE && handles.clickDown == 1
+    spline1 = masterData(1).EALL{handles.edgeIdx};
+    controls = spline1.control;
+    controlIdx = 1;
+    minn = 10000;
+    for j = 2: length(controls)-1
+        spl = controls(:,j);
+        subb = abs(spl(1) - newcp(1)) + ...
+                abs (spl(2) - newcp(2));
+        if subb < minn
+                controlIdx = j;
+                minn = subb;
+        end
+    end
+        controls(:, controlIdx) = newcp;
+        spline1.control = controls;
+        spline1 = splineEvalEven(spline1, true, true, false);
+        masterData(1).EALL{handles.edgeIdx} = spline1;
+        set(handles.eH{handles.edgeIdx},'XData', spline1.curve(1,:));
+        set(handles.eH{handles.edgeIdx},'YData', spline1.curve(2,:));
+        set(handles.cpH{handles.edgeIdx},'XData', spline1.control(1,:));
+        set(handles.cpH{handles.edgeIdx},'YData', spline1.control(2,:));
+    handles.masterData = masterData;
+    guidata(hObject,handles);
+end
 
 function stopTracking(hObject,eventdata)
 handles = guidata(hObject);
+handles.clickDown = 0;
 if handles.vertexIdx ~= -1
     handles.vertexIdx = -1;
     handles.vDT = setVVoronoi(handles);
 end
 guidata(hObject,handles)
 
+
+    function s = redraw(s)  
+        s.control
+        splineDraw(s, s.handles);
+
+%         if s.image
+ %            title(matchQuality(s.d, s.gradImg))
+%         end
+    
 function buttonPress(hObject,eventdata)
 handles = guidata(hObject);
 switch eventdata.Key

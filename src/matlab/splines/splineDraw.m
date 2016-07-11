@@ -36,5 +36,5 @@ else
     if ~oldhold
         hold off
     end
-    axis ij
+    %axis ij
 end
