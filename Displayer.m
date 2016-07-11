@@ -228,8 +228,8 @@ handles = guidata(hObject);
     masterData = handles.masterData; %Gets the data struct
 if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     %move point here
-    masterData(1).VALL{handles.vertexIdx} = newcp;
-    edge = masterData(1).ADJLIST{handles.vertexIdx};
+    masterData(handles.f).VALL{handles.vertexIdx} = newcp;
+    edge = masterData(handles.f).ADJLIST{handles.vertexIdx};
     edgeSize = size(edge);
     for i = 1:edgeSize(2)
         splineNum = edge(2,i);
@@ -238,11 +238,11 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
         controls = spline1.control;
 
         spl = controls(:, 1);
-        minn = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + ...
-                abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2));
+        minn = abs(spl(1) - masterData(handles.f).VALL{handles.vertexIdx}(1)) + ...
+                abs (spl(2) - masterData(handles.f).VALL{handles.vertexIdx}(2));
         spl = controls(:, length(controls));
-        subb = abs(spl(1) - masterData(1).VALL{handles.vertexIdx}(1)) + ...
-                abs (spl(2) - masterData(1).VALL{handles.vertexIdx}(2));
+        subb = abs(spl(1) - masterData(handles.f).VALL{handles.vertexIdx}(1)) + ...
+                abs (spl(2) - masterData(handles.f).VALL{handles.vertexIdx}(2));
         if subb < minn
                 splineIdx = length(controls);
         end       
@@ -250,7 +250,7 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
         controls(:, splineIdx) = newcp;
         spline1.control = controls;
         spline1 = splineEvalEven(spline1, true, true, false);
-        masterData(1).EALL{splineNum} = spline1;
+        masterData(handles.f).EALL{splineNum} = spline1;
         set(handles.eH{splineNum},'XData', spline1.curve(1,:));
         set(handles.eH{splineNum},'YData', spline1.curve(2,:));
         set(handles.cpH{splineNum},'XData', spline1.control(1,:));
@@ -264,7 +264,7 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
 if handles.onE && handles.clickDown == 1
-    spline1 = masterData(1).EALL{handles.edgeIdx};
+    spline1 = masterData(handles.f).EALL{handles.edgeIdx};
     controls = spline1.control;
     controlIdx = 1;
     minn = 10000;
@@ -280,7 +280,7 @@ if handles.onE && handles.clickDown == 1
         controls(:, controlIdx) = newcp;
         spline1.control = controls;
         spline1 = splineEvalEven(spline1, true, true, false);
-        masterData(1).EALL{handles.edgeIdx} = spline1;
+        masterData(handles.f).EALL{handles.edgeIdx} = spline1;
         set(handles.eH{handles.edgeIdx},'XData', spline1.curve(1,:));
         set(handles.eH{handles.edgeIdx},'YData', spline1.curve(2,:));
         set(handles.cpH{handles.edgeIdx},'XData', spline1.control(1,:));
