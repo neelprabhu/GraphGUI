@@ -17,6 +17,5 @@ for m = 1:numel(EALL)
         eMatrix(m,:) = [counter counter];
         counter = counter - 1;
     end
-end
-%eMatrix = unique(eMatrix,'rows','stable');    
+end 
 dt = delaunayTriangulation(eMatrix);
