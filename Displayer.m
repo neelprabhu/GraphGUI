@@ -59,43 +59,41 @@ handles.options = struct('l',l,'w',w,'alpha',alpha,'interval',interval, ...
     'spacing',spacing,'parallel',parallel,'verboseE',verboseE, ...
     'verboseG',verboseG,'siftflow',siftflow,'fname',fname);
 
-global ALL;
-GT = imread('myGT.png');
-handles.GT = padarray(GT, [20,20]);
-handles.ALL = padarray(ALL, [20,20,0]);
-[V,E,A,F] = embryoInitGraph(handles.GT,20,false);
-handles.masterData = struct('VALL',{V},'EALL',{E},'ADJLIST',{A},'FACELIST',{F});
-set(handles.frame,'String','1');
-handles.f = 1;
-
-%% Code for tracking mouse movements and clicks
-
 % Parameters into handles
 handles.vertexIdx = -1; % No vertex selected default
 handles.clickDown = 0;
 handles.isAdd = 0; % Not adding element default
 handles.addVertex = 0; % Not adding element default
 handles.addEdge = 0;
-handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
-handles.zStY = 20; handles.zStoY = size(handles.ALL(:,:,1),1)-19;
 handles.prevVIdx = 1; handles.onV = false;
 handles.prevEIdx = 1; handles.onE = false;
+set(handles.frame,'String','1');
 guidata(hObject,handles)
 
-showGraph_Callback(handles.showGraph,eventdata,handles); % Initializes window
-set(gca,'Visible','off') %Turns off axes
+global ALL;
+if ~isempty(ALL)
+    handles = guidata(hObject);
+    GT = imread('myGT.png');
+    handles.GT = padarray(GT, [20,20]);
+    handles.ALL = padarray(ALL, [20,20,0]);
+    handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
+    handles.zStY = 20; handles.zStoY = size(handles.ALL(:,:,1),1)-19; % Zoom settings
+    [V,E,A,F] = embryoInitGraph(handles.GT,20,false);
+    handles.masterData = struct('VALL',{V},'EALL',{E},'ADJLIST',{A},'FACELIST',{F});
+    handles.f = 1; % default frame
+    handles.vDT = setVVoronoi(handles);
+    handles.eDT = setEVoronoi(handles);
+    guidata(hObject,handles)
+    showGraph_Callback(handles.showGraph,eventdata,handles);
+end
 
+%% Code for tracking mouse movements and clicks
+
+set(gca,'Visible','off') %Turns off axes
 set(gcf, 'WindowButtonDownFcn', @selectPoint);
 set(gcf, 'WindowButtonMotionFcn', @trackPoint);
 set(gcf, 'WindowButtonUpFcn', @stopTracking);
 set(gcf, 'KeyPressFcn', @buttonPress);
-
-%% Sets up initial Voronoi diagram of vertices and edge midpoints
-
-handles = guidata(hObject);
-handles.vDT = setVVoronoi(handles);
-handles.eDT = setEVoronoi(handles);
-guidata(hObject,handles)
 
 function selectPoint(hObject,eventdata) % When mouse is clicked
     
@@ -223,13 +221,12 @@ end
 guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
-handles = guidata(hObject);
+handles = guidata(hObject);    
+if handles.vertexIdx ~= -1 && handles.vD < handles.eD
+    masterData = handles.masterData; %Gets the data struct
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
-    masterData = handles.masterData; %Gets the data struct
-if handles.vertexIdx ~= -1 && handles.vD < handles.eD
-    %move point here
-    masterData(1).VALL{handles.vertexIdx} = newcp;
+    masterData(1).VALL{handles.vertexIdx} = newcp; % Move point here.
     edge = masterData(1).ADJLIST{handles.vertexIdx};
     edgeSize = size(edge);
     for i = 1:edgeSize(2)
@@ -264,8 +261,12 @@ if handles.vertexIdx ~= -1 && handles.vD < handles.eD
     vH = handles.vH; vProp = vH{handles.vertexIdx};
     set(vProp,'XData',newcp(1),'YData',newcp(2))
 end
+
 if handles.onE && handles.clickDown == 1
-    spline1 = masterData(1).EALL{handles.edgeIdx};
+    masterData = handles.masterData; %Gets the data struct
+    newcp = get(gca,'CurrentPoint');
+    newcp = newcp(1, 1:2)';
+    spline1 = masterData(handles.f).EALL{handles.edgeIdx};
     controls = spline1.control;
     controlIdx = 1;
     minn = 10000;
@@ -281,7 +282,7 @@ if handles.onE && handles.clickDown == 1
         controls(:, controlIdx) = newcp;
         spline1.control = controls;
         spline1 = splineEvalEven(spline1, true, true, false);
-        masterData(1).EALL{handles.edgeIdx} = spline1;
+        masterData(handles.f).EALL{handles.edgeIdx} = spline1;
         set(handles.eH{handles.edgeIdx},'XData', spline1.curve(1,:));
         set(handles.eH{handles.edgeIdx},'YData', spline1.curve(2,:));
         set(handles.cpH{handles.edgeIdx},'XData', spline1.control(1,:));
@@ -460,8 +461,11 @@ handles.masterData = data.data;
 [file2, path2] = uigetfile({'*.tif';'*.*'}, 'Choose a pre-processed .tif stack.');
 stack = loadtiff([path2,file2]);
 handles.ALL = padarray(stack, [20,20,0]);
+handles.zStX = 20; handles.zStoX = size(handles.ALL(:,:,1),2)-19;
+handles.zStY = 20; handles.zStoY = size(handles.ALL(:,:,1),1)-19; % Zoom settings
+handles.f = 1;
+handles.vDT = setVVoronoi(handles); handles.eDT = setEVoronoi(handles);
 guidata(hObject,handles)
-
 
 %% Menu items
 
