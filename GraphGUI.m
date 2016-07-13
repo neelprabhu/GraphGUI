@@ -121,7 +121,7 @@ function segment_button_Callback(hObject, eventdata, handles)
 global img;
 global B;
 
-hminima = get(handles.thresh_slide, 'Value') .* 50;                                                 % the h parameter for matlab's imhmin function optimized to this data set                                                 % SEG holds the segmentations of image stack
+hminima = get(handles.thresh_slide, 'Value') .* 100;                                                 % the h parameter for matlab's imhmin function optimized to this data set                                                 % SEG holds the segmentations of image stack
 L = watershed(imhmin(medfilt2(img,[3,3]), hminima));          % watershed segmentation on each frame (after light median filtering for noise removal)
 B = imreadgroundtruth(L==0, true);                            % convert segmentation to ground truth format
 imshow(B);
@@ -215,7 +215,7 @@ function pull_down_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
+%       See ISPC and CsOMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end

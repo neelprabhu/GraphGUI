@@ -113,6 +113,13 @@ end
 % Find nearest vertex and edge
 [handles.vertexIdx,handles.vD] = nearestNeighbor(handles.vDT,handles.cp);
 [handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
+% 
+% for n = 1:length(handles.assoc)
+%     if ismember(handles.cpIdx,handles.assoc{n})
+%         handles.edgeIdx = n;
+%         break
+%     end
+% end
 
 % Adding vertex
 if handles.addVertex
@@ -186,9 +193,15 @@ if handles.addEdge == 2
     guidata(hObject,handles)
     return;
 end
-
+% 
 % Finds nearest edge and compare, change colors
-[handles.edgeIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
+% [handles.cpIdx,handles.eD] = nearestNeighbor(handles.eDT,handles.cp);
+% for n = 1:length(handles.assoc)
+%     if ismember(handles.cpIdx,handles.assoc{n})
+%         handles.edgeIdx = n;
+%         break
+%     end
+% end
 handles.vIndex = handles.vertexIdx;
 handles.eIndex = handles.edgeIdx;
 guidata(hObject,handles)
@@ -297,6 +310,10 @@ handles.clickDown = 0;
 if handles.vertexIdx ~= -1
     handles.vertexIdx = -1;
     handles.vDT = setVVoronoi(handles);
+end
+if handles.clickDown ~= 0
+    handles.clickDown = 0;
+    handles.eDT = setEVoronoi(handles);
 end
 guidata(hObject,handles)
 
@@ -438,6 +455,8 @@ answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
 sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
 [handles.masterData] = customMembraneTrack(handles.ALL, ...
     handles.options, handles.masterData,sFrame,eFrame); %Check! overwriting masterData.
+data = handles.masterData;
+save('under_segment.mat','data')
 guidata(hObject,handles)
 
 % --- Executes on button press in add_edge.
