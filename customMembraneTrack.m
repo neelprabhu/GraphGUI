@@ -100,8 +100,8 @@ for ii=(sFrame+1):eFrame
 	structA = struct('I1', {I1}, 'I2', {I2}, 'I2x', {grad(I2)});
     
 	% update graph
-    structUG = struct('I',{I1},'V',{VALL{1}},'E',{EALL{1}}, ...
-        'adjList',{ADJLIST{1}},'faceList',{FACELIST{1}}); % Absorb data
+    structUG = struct('I',{I1},'V',{VALL{ii-1}},'E',{EALL{ii-1}}, ...
+        'adjList',{ADJLIST{ii-1}},'faceList',{FACELIST{ii-1}}); % Absorb data
     
     [ structUG ] = updateGraph(structUG, structC, structD, parallel);
     V = structUG.V;
@@ -122,6 +122,6 @@ for ii=(sFrame+1):eFrame
 	toc
     
 end
-data = struct('VALL',VALL,'EALL',EALL,'ADJLIST',ADJLIST,'FACELIST',FACELIST);
 
+data = struct('VALL',VALL,'EALL',EALL,'ADJLIST',ADJLIST,'FACELIST',FACELIST); % output everything.
 end
