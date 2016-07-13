@@ -119,7 +119,7 @@ end
 % Adding vertex
 if handles.addVertex
     next = size(masterData(handles.f).VALL,1);
-    masterData(handles.f).VALL{next+1} = handles.cp;
+    masterData(handles.f).VALL{next+1} = handles.cp';
     masterData(handles.f).ADJLIST{next+1} = [];
     handles.vIndex = next+1;
     hold on;
@@ -137,30 +137,27 @@ if handles.addVertex
 end
 
 if handles.addEdge == 1    
-    handles.addE(1) = handles.vertexIdx;
+    handles.E1 = handles.vertexIdx;
     handles.addEdge = 2;
-    display(handles.addE(1));
+    display(handles.E1);
     guidata(hObject,handles)
     return;
 end
 
 if handles.addEdge == 2
-    handles.addE(2) = handles.vertexIdx;
+    handles.E2 = handles.vertexIdx;
     handles.addEdge = 0;
-    display(handles.addE(2));
+    display(handles.E2);
     
     masterData = handles.masterData;
     
     k = 2; % Number of interior control points
     nctr = k + 2; % Number of control points
     mult = ones(1, nctr - 3);
-    a = masterData(handles.f).VALL{handles.addE(1),1}
-    b = masterData(handles.f).VALL{handles.addE(2),1}
-    c = handles.masterData(handles.f).VALL{handles.addE(1),1}
-    control = [masterData(handles.f).VALL{handles.addE(1)}, ...
-        a+(b-c./3), ...
-        a+(b-c./3), ...
-        masterData(handles.f).VALL{handles.addE(2),1}];
+    control = [masterData(handles.f).VALL{handles.E1}, ...
+        masterData(handles.f).VALL{handles.E1}+(masterData(handles.f).VALL{handles.E2}-masterData(handles.f).VALL{handles.E1}).*(1/3), ...
+        masterData(handles.f).VALL{handles.E1}+(masterData(handles.f).VALL{handles.E2}-masterData(handles.f).VALL{handles.E1}).*(2/3), ...
+        masterData(handles.f).VALL{handles.E2}];
     order = 3;
     open = true;
     n = 101;
@@ -171,11 +168,11 @@ if handles.addEdge == 2
     next = size(masterData(handles.f).EALL,1);
     masterData(handles.f).EALL{next+1} = s;
     
-    tmp = [handles.addE(2);next+1];
-    masterData(handles.f).ADJLIST{handles.addE(1),1} = [masterData(handles.f).ADJLIST{handles.addE(1),1},...
+    tmp = [handles.E2;next+1];
+    masterData(handles.f).ADJLIST{handles.E1,1} = [masterData(handles.f).ADJLIST{handles.E1,1},...
         tmp];
-    tmp = [handles.addE(1);next+1];
-    masterData(handles.f).ADJLIST{handles.addE(2),1} = [masterData(handles.f).ADJLIST{handles.addE(2),1},...
+    tmp = [handles.E1;next+1];
+    masterData(handles.f).ADJLIST{handles.E2,1} = [masterData(handles.f).ADJLIST{handles.E2,1},...
         tmp];
     xlim = get(gca,'XLim');
     ylim = get(gca,'YLim');
@@ -188,6 +185,7 @@ if handles.addEdge == 2
     handles.masterData = masterData;
     handles.eDT = setEVoronoi(handles);
     guidata(hObject,handles)
+    return;
 end
 
 % Finds nearest edge and compare, change colors
@@ -224,7 +222,7 @@ end
 guidata(hObject,handles)
 
 function trackPoint(hObject,eventdata)
-handles = guidata(hObject);
+    handles = guidata(hObject);
     newcp = get(gca,'CurrentPoint');
     newcp = newcp(1, 1:2)';
     masterData = handles.masterData; %Gets the data struct
@@ -301,13 +299,10 @@ end
 guidata(hObject,handles)
 
 
-    function s = redraw(s)  
-        s.control
-        splineDraw(s, s.handles);
+function s = redraw(s)  
+s.control
+splineDraw(s, s.handles);
 
-%         if s.image
- %            title(matchQuality(s.d, s.gradImg))
-%         end
     
 function buttonPress(hObject,eventdata)
 handles = guidata(hObject);
