@@ -456,7 +456,7 @@ sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
 [handles.masterData] = customMembraneTrack(handles.ALL, ...
     handles.options, handles.masterData,sFrame,eFrame); %Check! overwriting masterData.
 data = handles.masterData;
-save('under_segment.mat','data')
+save('over_segment_fixed.mat','data')
 guidata(hObject,handles)
 
 % --- Executes on button press in add_edge.
