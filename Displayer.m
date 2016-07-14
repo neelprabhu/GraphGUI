@@ -487,6 +487,28 @@ guidata(hObject,handles)
 
 %% Menu items
 
+function x = graphChecker(hObject, eventdata)
+handles = guidata(hObject);
+%edge checking
+masterData = handles.masterData;
+frameNum = handles.f;
+edges = masterData(frameNum).EALL;
+vertices = masterData(frameNum).VALL;
+adjList = masterData(frameNum).ADJLIST;
+for i = 1:length(edges)
+    if length(adjList{i}) <= 2   %%idk if this should be 1 or 2 check later
+        x = 1;
+    end
+end
+for i = 1:length(vertices)
+    if isempty(adjList{i})
+        x = 2;
+    end
+end
+
+
+
+
 function file_Callback(hObject, eventdata, handles)
 % hObject    handle to file (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
