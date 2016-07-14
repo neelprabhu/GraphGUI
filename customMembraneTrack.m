@@ -91,7 +91,6 @@ for ii=(sFrame+1):eFrame
     fprintf('Tracking images %d -> %d\n', ii-1, ii);
     tic
     
-    %% Resume by Roger S. Zou
     % compute optimal graph
     I1 = ALL(:,:,ii-1);
     I2 = ALL(:,:,ii);

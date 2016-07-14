@@ -442,8 +442,8 @@ function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = guidata(hObject);
-imagesc(handles.ALL(:,:,handles.f));
+frame = str2double(get(handles.frame,'String'));
+imagesc(handles.ALL(:,:,frame));
 
 function open_track_Callback(hObject, eventdata, handles)
 % hObject    handle to open_track (see GCBO)
@@ -517,52 +517,35 @@ function sRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to sRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-showRaw_Callback(handles.showRaw, eventdata, handles)
+showRaw_Callback(hand, eventdata, handles)
+
 
 function addV_Callback(hObject, eventdata, handles)
 % hObject    handle to addV (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = guidata(hObject);
-handles.addVertex = 1;
-guidata(hObject,handles)
 
 function addE_Callback(hObject, eventdata, handles)
 % hObject    handle to addE (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = guidata(hObject);
-handles.addEdge = 1;
-guidata(hObject,handles)
 
 function delete_Callback(hObject, eventdata, handles)
 % hObject    handle to delete (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles = guidata(hObject);
-newhandles = deleteVE(handles);
-guidata(hObject,newhandles)
 
 function goFrame_Callback(hObject, eventdata, handles)
 % hObject    handle to goFrame (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-prompt = {'Go to Frame:'};
-dlg_title = 'Frame'; num_lines = 1; defaultans = {'1'};
-handles = guidata(hObject);
-answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
-handles.f = str2double(answer(1));
-guidata(hObject,handles)
-showRaw_Callback(handles.showRaw, eventdata, handles)
 
 function dataLoad_Callback(hObject, eventdata, handles)
 % hObject    handle to dataLoad (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-load_Callback(handles.load, eventdata, handles)
 
 function track_Callback(hObject, eventdata, handles)
 % hObject    handle to track (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-open_track_Callback(handles.open_track, eventdata, handles)
