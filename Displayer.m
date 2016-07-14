@@ -291,14 +291,15 @@ if handles.onE && handles.clickDown == 1
                 minn = subb;
         end
     end
-        controls(:, controlIdx) = newcp;
-        spline1.control = controls;
-        spline1 = splineEvalEven(spline1, true, true, false);
-        masterData(handles.f).EALL{handles.edgeIdx} = spline1;
-        set(handles.eH{handles.edgeIdx},'XData', spline1.curve(1,:));
-        set(handles.eH{handles.edgeIdx},'YData', spline1.curve(2,:));
-        set(handles.cpH{handles.edgeIdx},'XData', spline1.control(1,:));
-        set(handles.cpH{handles.edgeIdx},'YData', spline1.control(2,:));
+    controls(:, controlIdx) = newcp;
+    spline1.control = controls;
+    spline1 = splineEvalEven(spline1, true, true, false);
+    masterData(handles.f).EALL{handles.edgeIdx} = spline1;
+    set(handles.eH{handles.edgeIdx},'XData', spline1.curve(1,:));
+    set(handles.eH{handles.edgeIdx},'YData', spline1.curve(2,:));
+    set(handles.cpH{handles.edgeIdx},'XData', spline1.control(1,:));
+    set(handles.cpH{handles.edgeIdx},'YData', spline1.control(2,:));
+    
     handles.masterData = masterData;
     guidata(hObject,handles);
 end
@@ -440,8 +441,8 @@ function showRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to showRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-frame = str2double(get(handles.frame,'String'));
-imagesc(handles.ALL(:,:,frame));
+handles = guidata(hObject);
+imagesc(handles.ALL(:,:,handles.f));
 
 function open_track_Callback(hObject, eventdata, handles)
 % hObject    handle to open_track (see GCBO)
@@ -455,7 +456,7 @@ sFrame = str2double(answer(1)); eFrame = str2double(answer(2));
 [handles.masterData] = customMembraneTrack(handles.ALL, ...
     handles.options, handles.masterData,sFrame,eFrame); %Check! overwriting masterData.
 data = handles.masterData;
-save('under_segment.mat','data')
+save('over_segment_fixed.mat','data')
 guidata(hObject,handles)
 
 % --- Executes on button press in add_edge.
@@ -531,38 +532,58 @@ function sGraph_Callback(hObject, eventdata, handles)
 % hObject    handle to sGraph (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+showGraph_Callback(handles.showGraph, eventdata, handles)
 
 function sRaw_Callback(hObject, eventdata, handles)
 % hObject    handle to sRaw (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+showRaw_Callback(handles.showRaw, eventdata, handles)
 
 function addV_Callback(hObject, eventdata, handles)
 % hObject    handle to addV (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+handles.addVertex = 1;
+guidata(hObject,handles)
 
 function addE_Callback(hObject, eventdata, handles)
 % hObject    handle to addE (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+handles.addEdge = 1;
+guidata(hObject,handles)
 
 function delete_Callback(hObject, eventdata, handles)
 % hObject    handle to delete (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+handles = guidata(hObject);
+newhandles = deleteVE(handles);
+guidata(hObject,newhandles)
 
 function goFrame_Callback(hObject, eventdata, handles)
 % hObject    handle to goFrame (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+prompt = {'Go to Frame:'};
+dlg_title = 'Frame'; num_lines = 1; defaultans = {'1'};
+handles = guidata(hObject);
+answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+handles.f = str2double(answer(1));
+guidata(hObject,handles)
+showRaw_Callback(handles.showRaw, eventdata, handles)
 
 function dataLoad_Callback(hObject, eventdata, handles)
 % hObject    handle to dataLoad (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+load_Callback(handles.load, eventdata, handles)
 
 function track_Callback(hObject, eventdata, handles)
 % hObject    handle to track (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+open_track_Callback(handles.open_track, eventdata, handles)
