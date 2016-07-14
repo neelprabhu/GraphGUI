@@ -23,7 +23,7 @@ N = length(V);
 M = length(E);
 
 % setup figure
-f = 5;
+f = figure(1);
 hold on;
 imagesc(I)
 colormap gray
@@ -39,8 +39,8 @@ for ii=1:N
     if ~sum(isnan(v_i))
         state.pointStruct{ii} = plot(v_i(1), v_i(2),'go',...
             'MarkerSize',9,...
-            'MarkerEdgeColor','r',...
-            'MarkerFaceColor','r');
+            'MarkerEdgeColor','y',...
+            'MarkerFaceColor','y');
     end
 end
 
