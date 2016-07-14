@@ -22,7 +22,7 @@ function varargout = GraphGUI(varargin)
 
 % Edit the above text to modify the response to help GraphGUI
 
-% Last Modified by GUIDE v2.5 26-Jun-2016 21:24:25
+% Last Modified by GUIDE v2.5 14-Jul-2016 14:39:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -136,8 +136,9 @@ function thresh_slide_Callback(hObject, eventdata, handles)
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 global current;
 segment_button_Callback(handles.segment_button, eventdata, handles);
-overlay_button_Callback(handles.overlay_button,eventdata,handles);;
-pull_down_Callback(handles.pull_down, eventdata, handles);
+overlay_button_Callback(handles.overlay_button,eventdata,handles);
+global junk;
+imshow(junk)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -230,3 +231,57 @@ imwrite(B,'myGT.png');
 assignin('base','TIFF',TIFF);
 closereq;
 Displayer;
+
+
+% --------------------------------------------------------------------
+function file_Callback(hObject, eventdata, handles)
+% hObject    handle to file (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+% --------------------------------------------------------------------
+function view_Callback(hObject, eventdata, handles)
+% hObject    handle to view (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Do nothing
+
+% --------------------------------------------------------------------
+function gtShow_Callback(hObject, eventdata, handles)
+% hObject    handle to gtShow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global B;
+imshow(B)
+
+% --------------------------------------------------------------------
+function overlayShow_Callback(hObject, eventdata, handles)
+% hObject    handle to overlayShow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+overlay_button_Callback(handles.overlay_button,eventdata,handles)
+global junk;
+imshow(junk)
+
+% --------------------------------------------------------------------
+function rawShow_Callback(hObject, eventdata, handles)
+% hObject    handle to rawShow (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global img;
+imshow(img)
+
+% --------------------------------------------------------------------
+function dataLoad_Callback(hObject, eventdata, handles)
+% hObject    handle to dataLoad (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+pb_load_Callback(handles.pb_load, eventdata, handles)
+
+% --------------------------------------------------------------------
+function graphSend_Callback(hObject, eventdata, handles)
+% hObject    handle to graphSend (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+send_button_Callback(handles.send_button, eventdata, handles)
